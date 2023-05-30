@@ -113,14 +113,13 @@ class Corpus():
             if not point.shap.within(self.region):
                 point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
 
-    def distribute(self, exportPeriod=0, uni=False, init=True):
+    def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.005):
         for point in self.points:
             point.recallOg()
         # pre-uniformization
         self.preUniformization(init=init)
         # simulation parameters
         dt = 0.2
-        stop_tol = 0.005
         tri_tol = 0.1
         int_pres = 1.2
         k = 1

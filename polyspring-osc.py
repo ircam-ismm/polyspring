@@ -7,6 +7,9 @@ import shapely as sh
 import numpy as np
 
 class CorpusMax(Corpus):
+    def __init__(self, track, cols, client):
+        Corpus.__init__(self, track, cols)
+        self.client = client
 
     def export(self):
         current_idx = 0
@@ -87,17 +90,15 @@ def write_track(addrs, args, *unused):
             args[0].send_message('/append', grain)
     args[0].send_message('/done_init', 1) 
     args[0].send_message('/update', 'update')
-    args[1]['corpus'] = CorpusMax(args[1]['buffer'], args[0])
-    args[1]['available'] = True
+    args[1]['corpus'] = CorpusMax(args[1]['buffer'], (xcol, ycol), args[0])
     print('<-- Done')
 
 
 # ---- Manage unispring
-def distribute(addrs, args, *descr):
+def distribute(addrs, args):
     print('--> Distributing...')
-    args[1]['corpus'].setDescr(descr[0]+1, descr[1]+1)
     c1, c2 = args[1]['corpus'].distribute(exportPeriod=1)
-    args[1]['corpus'].exportToMax()
+    args[1]['corpus'].export()
     print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
 
 def change_interp(addrs, args, interp_value):
