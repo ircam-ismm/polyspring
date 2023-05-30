@@ -5,8 +5,8 @@ from scipy.spatial import Delaunay
 from scipy.interpolate import griddata
 
 
-def polygon_distance_function(region, points):
-    multi = sh.MultiPoint(points)
+def polygon_distance_function(region, vertices):
+    multi = sh.MultiPoint(vertices)
     print(type(multi.geoms))
     return [p.distance(region) for p in multi.geoms]
 
@@ -20,21 +20,28 @@ def gauss2D(x, y, mx, my, sigx, sigy, theta):
 
 class Corpus():
 
-    def __init__(self, track, cols=(0,1)):    
-        vertices = ((0.,0.),(1.,0.),(1.,1.),(0.,1.))
-        self.points = []
-        self.region = sh.Polygon(vertices)
+    def __init__(self, track, cols=(0,1)):
         self.dist_func = lambda points : polygon_distance_function(self.region, points)
         self.track = track
         self.h_dist = lambda x, y : 1
         self.interp = 0
+        self.setCols(self, cols)
 
     def setInterp(self, value):
         self.interp = value
 
+    def boundingRegion(self):
+        # Region to bounding box
+        xmin = min(self.points, key=Point.getX)
+        xmax = max(self.points, key=Point.getX)
+        ymin = min(self.points, key=Point.getY)
+        ymax = max(self.points, key=Point.getY)
+        vertices = ((xmin,ymin), (xmin,ymax), (xmax,ymax), (xmax,ymin))
+        self.setRegion(sh.MultiPoint(vertices))
+
     def setRegion(self, region):
         self.region = region
-        dist_func = lambda points : polygon_distance_function(self.region, points)
+        self.dist_func = lambda points : polygon_distance_function(self.region, points)
         if len(self.points) !=  0:
             self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
