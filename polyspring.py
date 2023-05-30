@@ -20,14 +20,13 @@ def gauss2D(x, y, mx, my, sigx, sigy, theta):
 
 class Corpus():
 
-    def __init__(self, track, client):    
+    def __init__(self, track, cols=(0,1)):    
         vertices = ((0.,0.),(1.,0.),(1.,1.),(0.,1.))
         self.points = []
         self.region = sh.Polygon(vertices)
         self.dist_func = lambda points : polygon_distance_function(self.region, points)
         self.track = track
         self.h_dist = lambda x, y : 1
-        self.client = client
         self.interp = 0
 
     def setInterp(self, value):
@@ -39,14 +38,14 @@ class Corpus():
         if len(self.points) !=  0:
             self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
-    def setDescr(self, descr_x, descr_y):
+    def setCols(self, cols):
         self.buffers_md = {}
         all_buffer = []
         # concatenate all buffers and store the length of each buffer separately
         for key,buffer in self.track.items():
             all_buffer += buffer
             self.buffers_md[key] = len(buffer)
-        self.points = tuple(Point(pt[descr_x], pt[descr_y]) for pt in all_buffer)
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]]) for pt in all_buffer)
         self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def getScalingFactor(self):
@@ -106,7 +105,7 @@ class Corpus():
             if not point.shap.within(self.region):
                 point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
 
-    def unispring(self, exportPeriod=0, uni=False, init=True, switch_on=True):
+    def distribute(self, exportPeriod=0, uni=False, init=True):
         for point in self.points:
             point.recallOg()
         # pre-uniformization
@@ -157,11 +156,7 @@ class Corpus():
             tot_count += 1
             # intermediary export to max
             if exportPeriod != 0  and tot_count%exportPeriod == 0:
-                self.exportToMax()
-            # check switch
-            if switch_on:
-                exit = True
-                print('process interupted')
+                self.export()
         # reset triangulation and return various counts
         for point in self.points:
             point.resetNear()
@@ -172,7 +167,7 @@ class Corpus():
         for point in self.points:
             point.recallUni()
         if reset:
-            self.exportToMax()
+            self.export()
             return
         N = 2 * int(np.ceil(np.sqrt(len(self.points))))
         coord = np.linspace(0, 1, N)
@@ -196,32 +191,10 @@ class Corpus():
         for i, point in enumerate(self.points):
             point.moveTo((point.x + disp_x[i], point.y + disp_y[i]))
             point.update()
-        self.exportToMax()
-        
-    def exportToMax(self):
-        current_idx = 0
-        for key, length in self.buffers_md.items():
-            self.client.send_message('/buffer_index', int(key))
-            self.client.send_message('/matrixcol', 7)
-            buffer = self.points[current_idx : current_idx + length]
-            current_idx += length            
-            uniX = [p.x * (1 - self.interp) + p.og_x * self.interp for p in buffer]
-            uniY = [p.y * (1 - self.interp) + p.og_y * self.interp for p in buffer]
-            n_rows = len(uniX)
-            steps = int(np.ceil(n_rows/200))
-            for i in range(steps):
-                if i != steps-1:
-                    self.client.send_message('/set_matrix', [i*200] + uniX[i*200:(i+1)*200])
-                else :
-                    self.client.send_message('/set_matrix', [i*200] + uniX[i*200:])
-            self.client.send_message('/matrixcol', 8)
-            for i in range(steps):
-                if i != steps-1:
-                    self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
-                else :
-                    self.client.send_message('/set_matrix', [i*200] + uniY[i*200:])
-        self.client.send_message('/refresh', 1)
+        self.export()
 
+    def export(self):
+        pass
 
 class Point():
 

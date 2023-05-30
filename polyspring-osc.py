@@ -6,6 +6,33 @@ from pythonosc import udp_client
 import shapely as sh
 import numpy as np
 
+class CorpusMax(Corpus):
+
+    def export(self):
+        current_idx = 0
+        for key, length in self.buffers_md.items():
+            self.client.send_message('/buffer_index', int(key))
+            self.client.send_message('/matrixcol', 7)
+            buffer = self.points[current_idx : current_idx + length]
+            current_idx += length            
+            uniX = [p.x * (1 - self.interp) + p.og_x * self.interp for p in buffer]
+            uniY = [p.y * (1 - self.interp) + p.og_y * self.interp for p in buffer]
+            n_rows = len(uniX)
+            steps = int(np.ceil(n_rows/200))
+            for i in range(steps):
+                if i != steps-1:
+                    self.client.send_message('/set_matrix', [i*200] + uniX[i*200:(i+1)*200])
+                else :
+                    self.client.send_message('/set_matrix', [i*200] + uniX[i*200:])
+            self.client.send_message('/matrixcol', 8)
+            for i in range(steps):
+                if i != steps-1:
+                    self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
+                else :
+                    self.client.send_message('/set_matrix', [i*200] + uniY[i*200:])
+        self.client.send_message('/refresh', 1)
+
+
 # Functions mapped to OSC addresses
 # ---- Manage import from Max
 def import_init(addrs, args, *message):
@@ -60,21 +87,18 @@ def write_track(addrs, args, *unused):
             args[0].send_message('/append', grain)
     args[0].send_message('/done_init', 1) 
     args[0].send_message('/update', 'update')
-    args[1]['corpus'] = Corpus(args[1]['buffer'], args[0])
+    args[1]['corpus'] = CorpusMax(args[1]['buffer'], args[0])
     args[1]['available'] = True
     print('<-- Done')
 
 
 # ---- Manage unispring
-def unispring(addrs, args, *descr):
-    if args[1]['available']:
-        print('--> Distributing...')
-        args[1]['available'] = False
-        args[1]['corpus'].setDescr(descr[0]+1, descr[1]+1)
-        c1, c2 = args[1]['corpus'].unispring(exportPeriod=1, switch_on=args[1]['available'])
-        args[1]['corpus'].exportToMax()
-        args[1]['available'] = True
-        print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
+def distribute(addrs, args, *descr):
+    print('--> Distributing...')
+    args[1]['corpus'].setDescr(descr[0]+1, descr[1]+1)
+    c1, c2 = args[1]['corpus'].distribute(exportPeriod=1)
+    args[1]['corpus'].exportToMax()
+    print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
 
 def change_interp(addrs, args, interp_value):
     args[1]['corpus'].setInterp(float(interp_value))
@@ -94,14 +118,11 @@ def change_density(addrs, args, func):
 
 # ---- Attractors
 def attractors(addrs, args, *param):
-    if args[1]['available']:
-        args[1]['available'] = False
-        if len(param) % 5 == 0:
-            gaussians_param = [param[5*i:5*(i+1)] for i in range(len(param)//5)]
-            args[1]["corpus"].simple_attractors(gaussians_param)
-        else:
-            args[1]["corpus"].simple_attractors(gaussians_param, reset=True)
-        args[1]['available'] = True
+    if len(param) % 5 == 0:
+        gaussians_param = [param[5*i:5*(i+1)] for i in range(len(param)//5)]
+        args[1]["corpus"].simple_attractors(gaussians_param)
+    else:
+        args[1]["corpus"].simple_attractors(gaussians_param, reset=True)
 
 
 if __name__ == "__main__":
@@ -131,7 +152,7 @@ if __name__ == "__main__":
     dispatcher.map("/set_cols", set_cols, client, global_hash)
     dispatcher.map("/write_track", write_track, client, global_hash)
     # Manage unispring ----
-    dispatcher.map("/unispring", unispring, client, global_hash)
+    dispatcher.map("/distribute", distribute, client, global_hash)
     dispatcher.map("/interpolation", change_interp, client, global_hash)
     dispatcher.map("/region", change_region, client, global_hash)
     dispatcher.map("/density", change_density, client, global_hash)
