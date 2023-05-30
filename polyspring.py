@@ -5,8 +5,8 @@ from scipy.spatial import Delaunay
 from scipy.interpolate import griddata
 
 
-def polygon_distance_function(region, vertices):
-    multi = sh.MultiPoint(vertices)
+def polygon_distance_function(region, points):
+    multi = sh.MultiPoint(points)
     print(type(multi.geoms))
     return [p.distance(region) for p in multi.geoms]
 
@@ -25,7 +25,8 @@ class Corpus():
         self.track = track
         self.h_dist = lambda x, y : 1
         self.interp = 0
-        self.setCols(self, cols)
+        self.setCols(cols)
+        self.boundingRegion()
 
     def setInterp(self, value):
         self.interp = value
@@ -37,7 +38,7 @@ class Corpus():
         ymin = min(self.points, key=Point.getY)
         ymax = max(self.points, key=Point.getY)
         vertices = ((xmin,ymin), (xmin,ymax), (xmax,ymax), (xmax,ymin))
-        self.setRegion(sh.MultiPoint(vertices))
+        self.setRegion(sh.Polygon(vertices))
 
     def setRegion(self, region):
         self.region = region
