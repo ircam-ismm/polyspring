@@ -4,7 +4,7 @@ from pythonosc import dispatcher
 from pythonosc import osc_server
 from pythonosc import udp_client
 import shapely as sh
-import numpy as np
+from math import ceil
 
 class CorpusMax(Corpus):
     def __init__(self, track, cols, client):
@@ -15,19 +15,19 @@ class CorpusMax(Corpus):
         current_idx = 0
         for key, length in self.buffers_md.items():
             self.client.send_message('/buffer_index', int(key))
-            self.client.send_message('/matrixcol', 7)
+            self.client.send_message('/matrixcol', 0)
             buffer = self.points[current_idx : current_idx + length]
             current_idx += length            
             uniX = [p.x * (1 - self.interp) + p.og_x * self.interp for p in buffer]
             uniY = [p.y * (1 - self.interp) + p.og_y * self.interp for p in buffer]
             n_rows = len(uniX)
-            steps = int(np.ceil(n_rows/200))
+            steps = int(ceil(n_rows/200))
             for i in range(steps):
                 if i != steps-1:
                     self.client.send_message('/set_matrix', [i*200] + uniX[i*200:(i+1)*200])
                 else :
                     self.client.send_message('/set_matrix', [i*200] + uniX[i*200:])
-            self.client.send_message('/matrixcol', 8)
+            self.client.send_message('/matrixcol', 1)
             for i in range(steps):
                 if i != steps-1:
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
@@ -52,7 +52,7 @@ def add_buffer(addrs, args, *message):
     n_cols = int(message[2]) + 1
     n_rows = int(message[0])
     buffer = str(message[1])
-    args[1]['buffer'][buffer] = np.zeros((n_rows, n_cols))
+    args[1]['buffer'][buffer] = [[0. for i in range(n_cols)]for j in range(n_rows)]
     args[1]['remaining_lines'][buffer] = n_rows
     args[1]['nb_lines'][buffer] = 0
     args[0].send_message('/start_dump', 1)
@@ -61,7 +61,7 @@ def add_line(addrs, args, *message):
     index = int(message[-2])
     buffer = str(message[-1])
     n_descr = len(message) - 2
-    descriptors = np.asarray([message[i] for i in range(n_descr)])
+    descriptors = [message[i] for i in range(n_descr)]
     args[1]['buffer'][buffer][index] = descriptors
     # update line count
     args[1]['remaining_lines'][buffer] -= 1

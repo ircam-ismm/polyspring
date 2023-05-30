@@ -21,22 +21,20 @@ def gauss2D(x, y, mx, my, sigx, sigy, theta):
 class Corpus():
 
     def __init__(self, track, cols=(0,1)):
-        self.dist_func = lambda points : polygon_distance_function(self.region, points)
         self.track = track
         self.h_dist = lambda x, y : 1
         self.interp = 0
-        self.setCols(cols)
-        self.boundingRegion()
+        self.setCols(cols, reset_region=True)
 
     def setInterp(self, value):
         self.interp = value
 
     def boundingRegion(self):
         # Region to bounding box
-        xmin = min(self.points, key=Point.getX)
-        xmax = max(self.points, key=Point.getX)
-        ymin = min(self.points, key=Point.getY)
-        ymax = max(self.points, key=Point.getY)
+        xmin = min(self.points, key=Point.getX).getX()
+        xmax = max(self.points, key=Point.getX).getX()
+        ymin = min(self.points, key=Point.getY).getY()
+        ymax = max(self.points, key=Point.getY).getY()
         vertices = ((xmin,ymin), (xmin,ymax), (xmax,ymax), (xmax,ymin))
         self.setRegion(sh.Polygon(vertices))
 
@@ -46,7 +44,7 @@ class Corpus():
         if len(self.points) !=  0:
             self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
-    def setCols(self, cols):
+    def setCols(self, cols, reset_region=False):
         self.buffers_md = {}
         all_buffer = []
         # concatenate all buffers and store the length of each buffer separately
@@ -54,6 +52,8 @@ class Corpus():
             all_buffer += buffer
             self.buffers_md[key] = len(buffer)
         self.points = tuple(Point(pt[cols[0]], pt[cols[1]]) for pt in all_buffer)
+        if reset_region:
+            self.boundingRegion()
         self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def getScalingFactor(self):
