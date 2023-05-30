@@ -1,31 +1,10 @@
 import argparse
-import unispring_v2 as usp
+from polyspring import Corpus
 from pythonosc import dispatcher
 from pythonosc import osc_server
 from pythonosc import udp_client
 import shapely as sh
 import numpy as np
-
-def MinMaxScale(track):
-    n_descr = len(track['1'][0])
-    norm_track = {}
-    list_min = [float('inf') for i in range(n_descr)]
-    list_max = [float('-inf') for i in range(n_descr)]
-    for key, table in track.items():
-        for line in table:
-            for i in range(1,n_descr):
-                if line[i] < list_min[i]:
-                    list_min[i] = line[i]
-                elif line[i] > list_max[i]:
-                    list_max[i] = line[i]
-    for key, table in track.items():
-        norm_track[key] = []
-        for line in table:
-            new_line = [line[0]]
-            for i in range(1,n_descr):
-                new_line.append((line[i]-list_min[i])/(list_max[i]-list_min[i]))
-            norm_track[key].append(new_line)
-    return norm_track
 
 # Functions mapped to OSC addresses
 # ---- Manage import from Max
@@ -36,6 +15,7 @@ def import_init(addrs, args, *message):
     args[1]['nb_buffer'] = int(message[0])
     args[1]['nb_lines'] = {}
     args[1]['remaining_lines'] = {}
+    args[1]['cols'] = tuple()
     args[0].send_message('/begin_import', 1)
 
 def add_buffer(addrs, args, *message):
@@ -68,21 +48,22 @@ def add_line(addrs, args, *message):
     if args[1]['nb_lines'][buffer] % args[1]['osc_batch_size'] == 0:
         args[0].send_message('/next_batch', 1)
 
-def create_norm_track(addrs, args, *unused):
-    args[1]['norm_buffer'] = {}
-    args[1]['norm_buffer'] = MinMaxScale(args[1]['buffer'])
-    args[0].send_message('/done_create', 1)
+def set_cols(addrs, args, *cols):
+    args[1]['cols'] = (int(cols[0]), int(cols[1]))
 
-def write_norm_track(addrs, args, *unused):
-    for idx_buffer, track in args[1]['norm_buffer'].items():
+def write_track(addrs, args, *unused):
+    xcol, ycol = args[1]['cols']
+    for idx_buffer, track in args[1]['buffer'].items():
         args[0].send_message('/buffer_index', int(idx_buffer))
-        for i,line in enumerate(track):
-            args[0].send_message('/append', line)
-    args[0].send_message('/done_norm', 1) 
+        for row in track:
+            grain = [row[0], row[xcol], row[ycol]]
+            args[0].send_message('/append', grain)
+    args[0].send_message('/done_init', 1) 
     args[0].send_message('/update', 'update')
-    args[1]['corpus'] = usp.Corpus(args[1]['norm_buffer'], args[0])
+    args[1]['corpus'] = Corpus(args[1]['buffer'], args[0])
     args[1]['available'] = True
     print('<-- Done')
+
 
 # ---- Manage unispring
 def unispring(addrs, args, *descr):
@@ -147,8 +128,8 @@ if __name__ == "__main__":
     dispatcher.map("/export_init", import_init, client, global_hash)
     dispatcher.map("/add_buffer", add_buffer, client, global_hash)
     dispatcher.map("/add_line", add_line, client, global_hash)
-    dispatcher.map("/create_norm_track", create_norm_track, client, global_hash)
-    dispatcher.map("/write_norm_track", write_norm_track, client, global_hash)
+    dispatcher.map("/set_cols", set_cols, client, global_hash)
+    dispatcher.map("/write_track", write_track, client, global_hash)
     # Manage unispring ----
     dispatcher.map("/unispring", unispring, client, global_hash)
     dispatcher.map("/interpolation", change_interp, client, global_hash)
