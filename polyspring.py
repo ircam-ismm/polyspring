@@ -43,21 +43,23 @@ class Corpus():
         ymin = min(points, key=lambda pt : pt[1])[1]
         ymax = max(points, key=lambda pt : pt[1])[1]
         self.bounds = (xmin, xmax, ymin, ymax)
+        # create points and initial spring length
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in self.all_buffer)
         # reset region
         if reset_region:
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
             self.setRegion(Polygon(vertices), is_norm=True)
-        # create points and initial spring length
-        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in self.all_buffer)
-        self.l0_uni = sqrt(2 / (sqrt(3) * len(self.points) / self.region.area))
+        else:
+            self.l0_uni = sqrt(2 / (sqrt(3) * len(self.points) / self.region.area))
 
     def setRegion(self, region, is_norm=False):
         # scale region if not normed, else store it
         if not is_norm:
-            def scale(pt):
-                x = (pt[0] - self.bounds[0]) / self.bounds[1]
-                y = (pt[1] - self.bounds[2]) / self.bounds[3]
-                return (x, y)
+            def scale(pts):
+                pts_copy = pts.copy()
+                pts_copy[:, 0] = (pts[:, 0] - self.bounds[0]) / (self.bounds[1] - self.bounds[0])
+                pts_copy[:, 1] = (pts[:, 1] - self.bounds[2]) / (self.bounds[3] - self.bounds[2])
+                return pts_copy
             self.region = transform(region, scale)
         else:
             self.region = region
@@ -67,6 +69,8 @@ class Corpus():
         center = self.region.centroid.coords[0]
         sides = sqrt(self.region.area) / 3
         self.region_inbox = (center, sides)
+        # compute the spring rest length
+        self.l0_uni = sqrt(2 / (sqrt(3) * len(self.points) / self.region.area))
 
     def getScalingFactor(self):
         targetArea = 0

@@ -109,11 +109,10 @@ def change_interp(addrs, args, interp_value):
     args[1]['corpus'].export(float(interp_value))
 
 def change_region(addrs, args, *coord):
-    if args[1]['available']:
-        print('--- change region')
-        vertices = [(coord[i],1-coord[i+1]) for i in range(0,len(coord),2)]
-        region = Polygon(vertices)
-        args[1]["corpus"].setRegion(region)
+    print('--- change region')
+    vertices = [(coord[i],1-coord[i+1]) for i in range(0,len(coord),2)]
+    region = Polygon(vertices)
+    args[1]["corpus"].setRegion(region, is_norm=True)
 
 def change_density(addrs, args, func):
     print('--- change density')
