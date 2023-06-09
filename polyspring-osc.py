@@ -15,7 +15,7 @@ class CorpusMax(Corpus):
         current_idx = 0
         for key, length in self.buffers_md.items():
             self.client.send_message('/buffer_index', int(key))
-            self.client.send_message('/matrixcol', 0)
+            self.client.send_message('/matrixcol', 2)
             buffer = self.points[current_idx : current_idx + length]
             current_idx += length            
             uniX = [p.x * (1 - self.interp) + p.og_x * self.interp for p in buffer]
@@ -27,7 +27,7 @@ class CorpusMax(Corpus):
                     self.client.send_message('/set_matrix', [i*200] + uniX[i*200:(i+1)*200])
                 else :
                     self.client.send_message('/set_matrix', [i*200] + uniX[i*200:])
-            self.client.send_message('/matrixcol', 1)
+            self.client.send_message('/matrixcol', 3)
             for i in range(steps):
                 if i != steps-1:
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
@@ -86,7 +86,7 @@ def write_track(addrs, args, *unused):
     for idx_buffer, track in args[1]['buffer'].items():
         args[0].send_message('/buffer_index', int(idx_buffer))
         for row in track:
-            grain = [row[0], row[xcol], row[ycol]]
+            grain = [row[0], row[xcol], row[ycol], row[xcol], row[ycol]]
             args[0].send_message('/append', grain)
     args[0].send_message('/done_init', 1) 
     args[0].send_message('/update', 'update')
@@ -94,12 +94,15 @@ def write_track(addrs, args, *unused):
     print('<-- Done')
 
 
-# ---- Manage unispring
-def distribute(addrs, args):
+# ---- Manage polyspring
+def distribute(addrs, args, *unused):
     print('--> Distributing...')
     c1, c2 = args[1]['corpus'].distribute(exportPeriod=1)
     args[1]['corpus'].export()
-    print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
+    if c1 < 0:
+        print('<-- Force Stop ({} steps, {} triangulations)'.format(-c1, c2))
+    else:
+        print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
 
 def change_interp(addrs, args, interp_value):
     args[1]['corpus'].setInterp(float(interp_value))
@@ -115,6 +118,9 @@ def change_region(addrs, args, *coord):
 def change_density(addrs, args, func):
     print('--- change density')
     args[1]["corpus"].h_dist = eval('lambda x, y :' + str(func))
+
+def stop(addrs, args, *unused):
+    args[1]["corpus"].stop_distribute()
 
 
 # ---- Attractors
@@ -158,6 +164,7 @@ if __name__ == "__main__":
     dispatcher.map("/region", change_region, client, global_hash)
     dispatcher.map("/density", change_density, client, global_hash)
     dispatcher.map("/attractors", attractors, client, global_hash)
+    dispatcher.map("/stop", stop, client, global_hash)
 
     # Init server
     server = osc_server.ThreadingOSCUDPServer((args_server.ip, args_server.port), dispatcher)
