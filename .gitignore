@@ -4,3 +4,4 @@
 *.pyc
 .DS_Store
 *.spec
+dist_demo.maxpat
