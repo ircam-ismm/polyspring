@@ -1,9 +1,9 @@
-import argparse
+from argparse import ArgumentParser
 from polyspring import Corpus
 from pythonosc import dispatcher
 from pythonosc import osc_server
 from pythonosc import udp_client
-import shapely as sh
+from shapely import Polygon
 from math import ceil
 
 class CorpusMax(Corpus):
@@ -111,7 +111,7 @@ def change_region(addrs, args, *coord):
     if args[1]['available']:
         print('--- change region')
         vertices = [(coord[i],1-coord[i+1]) for i in range(0,len(coord),2)]
-        region = sh.Polygon(vertices)
+        region = Polygon(vertices)
         args[1]["corpus"].setRegion(region)
 
 def change_density(addrs, args, func):
@@ -134,14 +134,14 @@ def attractors(addrs, args, *param):
 if __name__ == "__main__":
     print('Starting server...')
     # Client side (send to Max)
-    parser_client = argparse.ArgumentParser()
+    parser_client = ArgumentParser()
     parser_client.add_argument("--ip", default="127.0.0.1")
     parser_client.add_argument("--port", type=int, default=8012)
     args_client = parser_client.parse_args()
     client = udp_client.SimpleUDPClient(args_client.ip, args_client.port)
 
     # Server side parameters (receive from Max)
-    parser_server = argparse.ArgumentParser()
+    parser_server = ArgumentParser()
     parser_server.add_argument("--ip", default="127.0.0.1")
     parser_server.add_argument("--port", type=int, default=8011)
     args_server = parser_server.parse_args()
