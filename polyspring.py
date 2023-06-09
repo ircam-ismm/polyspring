@@ -221,8 +221,8 @@ class Point():
         self.scaled_og_y = y
         self.scaled_x = x
         self.scaled_y = y
-        normalized_x = (x - bounds[0]) / bounds[1]
-        normalized_y = (y - bounds[2]) / bounds[3]
+        normalized_x = (x - bounds[0]) / (bounds[1] - bounds[0])
+        normalized_y = (y - bounds[2]) / (bounds[3] - bounds[2])
         self.og_x = normalized_x # original position
         self.og_y = normalized_y
         self.x = normalized_x # current position
@@ -261,8 +261,8 @@ class Point():
     def update(self, bounds):
         self.x += self.push_x
         self.y += self.push_y
-        self.scaled_x = self.x * bounds[1] + bounds[0]
-        self.scaled_y = self.y * bounds[3] + bounds[2]
+        self.scaled_x = self.x * (bounds[1] - bounds[0]) + bounds[0]
+        self.scaled_y = self.y * (bounds[3] - bounds[2]) + bounds[2]
         self.push_x = 0.0
         self.push_y = 0.0
         self.shap = ShPoint(self.x, self.y)
@@ -289,8 +289,8 @@ class Point():
     def recallOg(self, bounds):
         self.x = self.og_x
         self.y = self.og_y
-        self.scaled_x = self.x * bounds[1] + bounds[0]
-        self.scaled_y = self.y * bounds[3] + bounds[2]
+        self.scaled_x = self.x * (bounds[1] - bounds[0]) + bounds[0]
+        self.scaled_y = self.y * (bounds[3] - bounds[2]) + bounds[2]
         self.shap = ShPoint(self.x, self.y)
 
     def storeUni(self):

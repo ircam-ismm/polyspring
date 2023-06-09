@@ -89,7 +89,7 @@ def write_track(addrs, args, *cols):
             grain = [row[0], row[xcol], row[ycol], row[xcol], row[ycol]]
             args[0].send_message('/append', grain)
     args[0].send_message('/done_init', 1) 
-    args[0].send_message('/update', 'update')
+    args[0].send_message('/update', 1)
     args[1]['corpus'] = CorpusMax(args[1]['buffer'], (xcol, ycol), args[0])
     print('<-- Done')
 
@@ -103,6 +103,7 @@ def distribute(addrs, args, *unused):
         print('<-- Force Stop ({} steps, {} triangulations)'.format(-c1, c2))
     else:
         print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
+    client.send_message('/update', 1)
 
 def change_interp(addrs, args, interp_value):
     args[1]['corpus'].export(float(interp_value))
