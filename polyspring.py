@@ -24,7 +24,7 @@ class Corpus():
         self.track = track
         self.h_dist = lambda x, y : 1
         self.interp = 0
-        self.setCols(cols, reset_region=True)
+        self.setCols(cols)
         self.stop = False
 
     def setInterp(self, value):
@@ -37,16 +37,17 @@ class Corpus():
         for key,buffer in self.track.items():
             all_buffer += buffer
             self.buffers_md[key] = len(buffer)
-        self.points = tuple(Point(pt[cols[0]], pt[cols[1]]) for pt in all_buffer)
-        self.computeBounds(change_region=True)
+        points = tuple((pt[cols[0]], pt[cols[1]]) for pt in all_buffer)
+        self.computeBounds(points, change_region=True)
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in all_buffer)
         self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
-    def computeBounds(self, change_region=False):
+    def computeBounds(self, points, change_region=False):
         # Region to bounding box
-        xmin = min(self.points, key=Point.getX).getX()
-        xmax = max(self.points, key=Point.getX).getX()
-        ymin = min(self.points, key=Point.getY).getY()
-        ymax = max(self.points, key=Point.getY).getY()
+        xmin = min(points, key=lambda pt : pt[0])[0]
+        xmax = max(points, key=lambda pt : pt[0])[0]
+        ymin = min(points, key=lambda pt : pt[1])[1]
+        ymax = max(points, key=lambda pt : pt[1])[1]
         self.bounds = (xmin, xmax, ymin, ymax)
         if change_region:
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
@@ -122,7 +123,7 @@ class Corpus():
 
     def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.005):
         for point in self.points:
-            point.recallOg()
+            point.recallOg(self.bounds)
         # pre-uniformization
         self.preUniformization(init=init)
         #return 0, 0
@@ -154,7 +155,7 @@ class Corpus():
                     midX ,midY = point.midTo(near)
                     f = k * (int_pres * hScale / self.h_dist(midX, midY) - point.distTo(near))
                     if f > 0:
-                        near.repulsiveForce(dt * f, point, self.size)
+                        near.repulsiveForce(dt * f, point)
             # second loop after all forces computation
             for point in self.points: 
                 # check stop condition if inside region, else move it back inside
@@ -164,7 +165,7 @@ class Corpus():
                 else:
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
                 # update point positions
-                point.update()
+                point.update(self.bounds)
                 # check if triangulation needs to be updated
                 if not updateTri and point.distFromOrigin() / self.l0_uni > tri_tol:
                     updateTri = True
@@ -218,6 +219,8 @@ class Corpus():
 class Point():
 
     def __init__(self, x, y, bounds):
+        self.scaled_og_x = x
+        self.scaled_og_y = y
         self.scaled_x = x
         self.scaled_y = y
         normalized_x = (x - bounds[0]) / bounds[1]
@@ -249,17 +252,19 @@ class Point():
     def distTo(self, point):
         return np.sqrt((self.x-point.x)**2 + (self.y-point.y)**2)
 
-    def repulsiveForce(self, f, point, size=1):
+    def repulsiveForce(self, f, point):
         angle = np.arctan2(self.y - point.y, self.x - point.x)
-        self.push_x += f * np.cos(angle) * size[0] / size[1]
-        self.push_y += f * np.sin(angle) * size[1] / size[0]
+        self.push_x += f * np.cos(angle)
+        self.push_y += f * np.sin(angle)
         self.shap = sh.Point(
             self.x + self.push_x,
             self.y + self.push_y) # update the shapely point now for outside observation
 
-    def update(self):
+    def update(self, bounds):
         self.x += self.push_x
         self.y += self.push_y
+        self.scaled_x = self.x * bounds[1] + bounds[0]
+        self.scaled_y = self.y * bounds[3] + bounds[2]
         self.push_x = 0.0
         self.push_y = 0.0
         self.shap = sh.Point(self.x, self.y)
@@ -283,13 +288,12 @@ class Point():
     def moveDist(self):
         return np.sqrt(self.push_x ** 2 + self.push_y ** 2)
 
-    def recallOg(self):
+    def recallOg(self, bounds):
         self.x = self.og_x
         self.y = self.og_y
+        self.scaled_x = self.x * bounds[1] + bounds[0]
+        self.scaled_y = self.y * bounds[3] + bounds[2]
         self.shap = sh.Point(self.x, self.y)
-    
-    def getScaled(self, bounds):
-        self.scaled_x = self.x 
 
     def storeUni(self):
         self.uni_x = self.x

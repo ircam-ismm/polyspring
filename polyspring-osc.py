@@ -18,8 +18,8 @@ class CorpusMax(Corpus):
             self.client.send_message('/matrixcol', 2)
             buffer = self.points[current_idx : current_idx + length]
             current_idx += length            
-            uniX = [p.x * (1 - self.interp) + p.og_x * self.interp for p in buffer]
-            uniY = [p.y * (1 - self.interp) + p.og_y * self.interp for p in buffer]
+            uniX = [p.scaled_x * (1 - self.interp) + p.scaled_og_x * self.interp for p in buffer]
+            uniY = [p.scaled_y * (1 - self.interp) + p.scaled_og_y * self.interp for p in buffer]
             n_rows = len(uniX)
             steps = int(ceil(n_rows/200))
             for i in range(steps):
