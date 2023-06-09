@@ -11,15 +11,15 @@ class CorpusMax(Corpus):
         Corpus.__init__(self, track, cols)
         self.client = client
 
-    def export(self):
+    def export(self, interp=0):
         current_idx = 0
         for key, length in self.buffers_md.items():
             self.client.send_message('/buffer_index', int(key))
             self.client.send_message('/matrixcol', 2)
             buffer = self.points[current_idx : current_idx + length]
             current_idx += length            
-            uniX = [p.scaled_x * (1 - self.interp) + p.scaled_og_x * self.interp for p in buffer]
-            uniY = [p.scaled_y * (1 - self.interp) + p.scaled_og_y * self.interp for p in buffer]
+            uniX = [p.scaled_x * (1 - interp) + p.scaled_og_x * interp for p in buffer]
+            uniY = [p.scaled_y * (1 - interp) + p.scaled_og_y * interp for p in buffer]
             n_rows = len(uniX)
             steps = int(ceil(n_rows/200))
             for i in range(steps):
@@ -79,10 +79,10 @@ def add_line(addrs, args, *message):
         args[0].send_message('/next_batch', 1)
 
 def set_cols(addrs, args, *cols):
-    args[1]['cols'] = (int(cols[0]), int(cols[1]))
+    args[1]['corpus'].setCols(cols)
 
-def write_track(addrs, args, *unused):
-    xcol, ycol = args[1]['cols']
+def write_track(addrs, args, *cols):
+    xcol, ycol = cols
     for idx_buffer, track in args[1]['buffer'].items():
         args[0].send_message('/buffer_index', int(idx_buffer))
         for row in track:
@@ -105,8 +105,7 @@ def distribute(addrs, args, *unused):
         print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
 
 def change_interp(addrs, args, interp_value):
-    args[1]['corpus'].setInterp(float(interp_value))
-    args[1]['corpus'].exportToMax()
+    args[1]['corpus'].export(float(interp_value))
 
 def change_region(addrs, args, *coord):
     if args[1]['available']:

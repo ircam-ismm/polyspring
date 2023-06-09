@@ -21,37 +21,33 @@ def gauss2D(x, y, mx, my, sigx, sigy, theta):
 class Corpus():
 
     def __init__(self, track, cols=(0,1)):
-        self.track = track
+        self.track = track        
+        self.buffers_md = {}
+        all_buffer = []
+        # concatenate all buffers and store the length of each buffer separately
+        for key,buffer in self.track.items():
+            self.all_buffer += buffer
+            self.buffers_md[key] = len(buffer)
         self.h_dist = lambda x, y : 1
         self.interp = 0
         self.setCols(cols)
         self.stop = False
 
-    def setInterp(self, value):
-        self.interp = value
-
-    def setCols(self, cols):
-        self.buffers_md = {}
-        all_buffer = []
-        # concatenate all buffers and store the length of each buffer separately
-        for key,buffer in self.track.items():
-            all_buffer += buffer
-            self.buffers_md[key] = len(buffer)
-        points = tuple((pt[cols[0]], pt[cols[1]]) for pt in all_buffer)
-        self.computeBounds(points, change_region=True)
-        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in all_buffer)
-        self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
-
-    def computeBounds(self, points, change_region=False):
-        # Region to bounding box
+    def setCols(self, cols, reset_region=True):
+        points = tuple((pt[cols[0]], pt[cols[1]]) for pt in self.all_buffer)
+        # Point range to boundinx box
         xmin = min(points, key=lambda pt : pt[0])[0]
         xmax = max(points, key=lambda pt : pt[0])[0]
         ymin = min(points, key=lambda pt : pt[1])[1]
         ymax = max(points, key=lambda pt : pt[1])[1]
         self.bounds = (xmin, xmax, ymin, ymax)
-        if change_region:
+        # reset region
+        if reset_region:
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
             self.setRegion(sh.Polygon(vertices), is_norm=True)
+        # create points and initial spring length
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in self.all_buffer)
+        self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def setRegion(self, region, is_norm=False):
         # scale region if not normed, else store it
