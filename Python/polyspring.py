@@ -1,5 +1,4 @@
-from numpy import asarray, array, cos, sin, exp, sqrt, ceil
-from numpy import linspace, meshgrid, zeros_like, gradient, arctan2
+import numpy as np
 from shapely import MultiPoint, Polygon, transform
 from shapely import Point as ShPoint
 from shapely.ops import nearest_points
@@ -13,10 +12,10 @@ def polygon_distance_function(region, points):
     return [p.distance(region) for p in multi.geoms]
 
 def gauss2D(x, y, mx, my, sigx, sigy, theta):
-    a = cos(theta)**2/(2*sigx**2) + sin(theta)**2/(2*sigy**2)
-    b = -sin(2*theta)/(4*sigx**2) + sin(2*theta)/(4*sigy**2)
-    c = sin(theta)**2/(2*sigx**2) + cos(theta)**2/(2*sigy**2)
-    gauss = exp(- a*(x-mx)**2 - 2*b*(x-mx)*(y-my) - c*(y-my)**2)
+    a = np.cos(theta)**2/(2*sigx**2) + np.sin(theta)**2/(2*sigy**2)
+    b = -np.sin(2*theta)/(4*sigx**2) + np.sin(2*theta)/(4*sigy**2)
+    c = np.sin(theta)**2/(2*sigx**2) + np.cos(theta)**2/(2*sigy**2)
+    gauss = np.exp(- a*(x-mx)**2 - 2*b*(x-mx)*(y-my) - c*(y-my)**2)
     return gauss
 
 
@@ -50,7 +49,7 @@ class Corpus():
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
             self.setRegion(Polygon(vertices), is_norm=True)
         else:
-            self.l0_uni = sqrt(2 / (sqrt(3) * len(self.points) / self.region.area))
+            self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def setRegion(self, region, is_norm=False):
         # scale region if not normed, else store it
@@ -67,10 +66,10 @@ class Corpus():
         self.dist_func = lambda points : polygon_distance_function(self.region, points)
         # compute an inner box for dist init
         center = self.region.centroid.coords[0]
-        sides = sqrt(self.region.area) / 3
+        sides = np.sqrt(self.region.area) / 3
         self.region_inbox = (center, sides)
         # compute the spring rest length
-        self.l0_uni = sqrt(2 / (sqrt(3) * len(self.points) / self.region.area))
+        self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def getScalingFactor(self):
         targetArea = 0
@@ -81,7 +80,7 @@ class Corpus():
                 nPair += 1
                 midX ,midY = point.midTo(near)
                 targetArea += 1 / self.h_dist(midX, midY)**2
-        return self.l0_uni * sqrt(nPair / targetArea)
+        return self.l0_uni * np.sqrt(nPair / targetArea)
 
     def preUniformization(self, init=True):
         c, s = self.region_inbox
@@ -97,7 +96,7 @@ class Corpus():
 
     def delaunayTriangulation(self):
         allCoord = [[pt.x, pt.y] for pt in self.points]
-        allCoord = asarray(allCoord)
+        allCoord = np.asarray(allCoord)
         triangulation = Delaunay(allCoord)
         self.updateNearPoints(triangulation)
         return triangulation
@@ -123,7 +122,7 @@ class Corpus():
     def stop_distribute(self):
         self.stop = True
 
-    def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.005):
+    def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.001):
         for point in self.points:
             point.recallOg(self.bounds)
         # pre-uniformization
@@ -191,23 +190,23 @@ class Corpus():
         if reset:
             self.export()
             return
-        N = 2 * int(ceil(sqrt(len(self.points))))
-        coord = linspace(0, 1, N)
-        x, y = meshgrid(coord, coord)
-        density = zeros_like(x)
+        N = 2 * int(np.ceil(np.sqrt(len(self.points))))
+        coord = np.linspace(0, 1, N)
+        x, y = np.meshgrid(coord, coord)
+        density = np.zeros_like(x)
         for param in gaussians_param:
             gaussian = gauss2D(x, y, *param)
             gaussian /= gaussian.max()
             density += gaussian
         density = self.l0_uni * (density - density.min()) / (density.max() - density.min())
-        grad = gradient(density)
-        grid = array( (x.flatten(), y.flatten()) ).T
-        coords_x = array([pt.x for pt in self.points])
-        coords_y = array([pt.y for pt in self.points])
+        grad = np.gradient(density)
+        grid = np.array( (x.flatten(), y.flatten()) ).T
+        coords_x = np.array([pt.x for pt in self.points])
+        coords_y = np.array([pt.y for pt in self.points])
         grad_x = griddata(grid, grad[0].flatten(), (coords_x, coords_y))
         grad_y = griddata(grid, grad[1].flatten(), (coords_x, coords_y))
         interp_density = griddata(grid, density.flatten(), (coords_x, coords_y))
-        grad_norm = sqrt(grad_x**2 + grad_y**2)
+        grad_norm = np.sqrt(grad_x**2 + grad_y**2)
         disp_x = interp_density * grad_y / (grad_norm + grad_norm.max()/1000)
         disp_y = interp_density * grad_x / (grad_norm + grad_norm.max()/1000)
         for i, point in enumerate(self.points):
@@ -252,12 +251,12 @@ class Point():
         return self.y
     
     def distTo(self, point):
-        return sqrt((self.x-point.x)**2 + (self.y-point.y)**2)
+        return np.sqrt((self.x-point.x)**2 + (self.y-point.y)**2)
 
     def repulsiveForce(self, f, point):
-        angle = arctan2(self.y - point.y, self.x - point.x)
-        self.push_x += f * cos(angle)
-        self.push_y += f * sin(angle)
+        angle = np.arctan2(self.y - point.y, self.x - point.x)
+        self.push_x += f * np.cos(angle)
+        self.push_y += f * np.sin(angle)
         self.shap = ShPoint(
             self.x + self.push_x,
             self.y + self.push_y) # update the shapely point now for outside observation
@@ -276,7 +275,7 @@ class Point():
         self.prev_y = self.y
         
     def distFromOrigin(self):
-        return sqrt((self.x-self.prev_x)**2 + (self.y-self.prev_y)**2)
+        return np.sqrt((self.x-self.prev_x)**2 + (self.y-self.prev_y)**2)
     
     def resetNear(self):
         self.near = []
@@ -288,7 +287,7 @@ class Point():
         self.push_y = nextY - self.y
 
     def moveDist(self):
-        return sqrt(self.push_x ** 2 + self.push_y ** 2)
+        return np.sqrt(self.push_x ** 2 + self.push_y ** 2)
 
     def recallOg(self, bounds):
         self.x = self.og_x

@@ -4,6 +4,7 @@ from pythonosc import dispatcher
 from pythonosc import osc_server
 from pythonosc import udp_client
 from shapely import Polygon
+import numpy as np
 from math import ceil
 
 class CorpusMax(Corpus):
@@ -33,7 +34,7 @@ class CorpusMax(Corpus):
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
                 else :
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:])
-        self.client.send_message('/refresh', 1)
+        self.client.send_message('/step', 1)
 
 
 # Functions mapped to OSC addresses
@@ -78,9 +79,6 @@ def add_line(addrs, args, *message):
     if args[1]['nb_lines'][buffer] % args[1]['osc_batch_size'] == 0:
         args[0].send_message('/next_batch', 1)
 
-def set_cols(addrs, args, *cols):
-    args[1]['corpus'].setCols(cols)
-
 def write_track(addrs, args, *cols):
     xcol, ycol = cols
     for idx_buffer, track in args[1]['buffer'].items():
@@ -113,6 +111,11 @@ def change_region(addrs, args, *coord):
     vertices = [(coord[i],1-coord[i+1]) for i in range(0,len(coord),2)]
     region = Polygon(vertices)
     args[1]["corpus"].setRegion(region, is_norm=True)
+
+def set_cols(addrs, args, *cols):
+    print('--- change columns to {} {}'.format(*cols))
+    args[1]['corpus'].setCols(cols)
+    args[1]['corpus'].export()
 
 def change_density(addrs, args, func):
     print('--- change density')
