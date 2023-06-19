@@ -31,8 +31,8 @@ class Corpus():
             self.buffers_md[key] = len(buffer)
         self.h_dist = lambda x, y : 1
         self.interp = 0
-        self.setCols(cols)
         self.stop = False
+        self.setCols(cols)
 
     def setCols(self, cols, reset_region=True):
         points = tuple((pt[cols[0]], pt[cols[1]]) for pt in self.all_buffer)
@@ -50,6 +50,7 @@ class Corpus():
             self.setRegion(Polygon(vertices), is_norm=True)
         else:
             self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
+        return self.bounds
 
     def setRegion(self, region, is_norm=False):
         # scale region if not normed, else store it

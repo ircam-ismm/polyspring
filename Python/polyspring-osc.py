@@ -83,13 +83,19 @@ def write_track(addrs, args, *cols):
     xcol, ycol = cols
     for idx_buffer, track in args[1]['buffer'].items():
         args[0].send_message('/buffer_index', int(idx_buffer))
+        args[0].send_message('/clear', 1) 
         for row in track:
             grain = [row[0], row[xcol], row[ycol], row[xcol], row[ycol]]
             args[0].send_message('/append', grain)
-    args[0].send_message('/done_init', 1) 
-    args[0].send_message('/update', 1)
     args[1]['corpus'] = CorpusMax(args[1]['buffer'], (xcol, ycol), args[0])
+    args[0].send_message('/bounds', args[1]['corpus'].bounds)
+    args[0].send_message('/done_init', 1)
+    args[0].send_message('/update', 1)
     print('<-- Done')
+    
+def set_cols(addrs, args, *cols):
+    print('--- change columns to {} {}'.format(*cols))
+    write_track(addrs, args, *cols)
 
 
 # ---- Manage polyspring
@@ -101,7 +107,12 @@ def distribute(addrs, args, *unused):
         print('<-- Force Stop ({} steps, {} triangulations)'.format(-c1, c2))
     else:
         print('<-- Done ({} steps, {} triangulations)'.format(c1, c2))
-    client.send_message('/update', 1)
+    # print(max(args[1]['corpus'].points, key=lambda pt:pt.x).x)
+    # print(max(args[1]['corpus'].points, key=lambda pt:pt.y).y)
+    args[0].send_message('/update', 1)
+
+def get_bounds(addrs, args, *unused):
+    args[0].send_message('/bounds', args[1]['corpus'].bounds)
 
 def change_interp(addrs, args, interp_value):
     args[1]['corpus'].export(float(interp_value))
@@ -111,11 +122,6 @@ def change_region(addrs, args, *coord):
     vertices = [(coord[i],1-coord[i+1]) for i in range(0,len(coord),2)]
     region = Polygon(vertices)
     args[1]["corpus"].setRegion(region, is_norm=True)
-
-def set_cols(addrs, args, *cols):
-    print('--- change columns to {} {}'.format(*cols))
-    args[1]['corpus'].setCols(cols)
-    args[1]['corpus'].export()
 
 def change_density(addrs, args, func):
     print('--- change density')
@@ -167,6 +173,7 @@ if __name__ == "__main__":
     dispatcher.map("/density", change_density, client, global_hash)
     dispatcher.map("/attractors", attractors, client, global_hash)
     dispatcher.map("/stop", stop, client, global_hash)
+    dispatcher.map("/get_bounds", get_bounds, client, global_hash)
 
     # Init server
     server = osc_server.ThreadingOSCUDPServer((args_server.ip, args_server.port), dispatcher)
