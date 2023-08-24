@@ -70,9 +70,9 @@ class Corpus():
         sides = np.sqrt(self.region.area) / 3
         self.region_inbox = (center, sides)
         # compute the spring rest length
-        self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
+        self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area)) # eq. (4)
 
-    def getScalingFactor(self):
+    def getScalingFactor(self): # see eq (5), h = \rho
         target_area = 0
         npair = 0
         average_dist = 0
@@ -103,9 +103,12 @@ class Corpus():
         return triangulation
     
     def updateNearPoints(self, triangulation):
+        # triangulation is a list of simplices (= triangles for 2D)
+        # a simplex is a list of 3 vertex indices
         for point in self.points:
             point.resetNear()
             point.updateOrigin()
+        # populate near lists of all points taking part in triangle
         for tri in triangulation.simplices:
             p1 = self.points[tri[0]]
             p2 = self.points[tri[1]]
@@ -124,16 +127,18 @@ class Corpus():
         self.stop = True
 
     def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.001):
+        # stop_tol: threshold for movement of a single point to stop iterations, can be 0.1
+        
         for point in self.points:
             point.recallOg(self.bounds)
         # pre-uniformization
         self.preUniformization(init=init)
         #return 0, 0
         # simulation parameters
-        dt = 0.2
-        tri_tol = 0.1
-        int_pres = 1.2
-        k = 1
+        dt = 0.2        # simulation step
+        tri_tol = 0.1   # displacement threshold (relative to l0_uni) for retriangularisation
+        int_pres = 1.2  # spring pressure
+        k = 1           # spring stiffness (supposing mass = 1)
         # variable initialization
         self.stop = False
         hscale = self.l0_uni
@@ -238,7 +243,7 @@ class Point():
         self.prev_y = normalized_y
         self.push_x = 0.0 # amount of pushing for next step
         self.push_y = 0.0
-        self.near = []
+        self.near = [] # list of nearest points for triangulation
     
     def midTo(self, point):
         midx = (self.x + point.x)/2
@@ -263,7 +268,7 @@ class Point():
             self.y + self.push_y) # update the shapely point now for outside observation
 
     def update(self, bounds):
-        self.x += self.push_x
+        self.x += self.push_x # apply movement
         self.y += self.push_y
         self.scaled_x = self.x * (bounds[1] - bounds[0]) + bounds[0]
         self.scaled_y = self.y * (bounds[3] - bounds[2]) + bounds[2]
