@@ -33,8 +33,6 @@ class Corpus():
         self.interp = 0
         self.stop = False
         self.setCols(cols)
-        self.bound = (0, 1, 0, 1)
-        self.region = None
 
     def setCols(self, cols, reset_region=True):
         points = tuple((pt[cols[0]], pt[cols[1]]) for pt in self.all_buffer)
