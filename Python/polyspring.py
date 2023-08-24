@@ -33,6 +33,8 @@ class Corpus():
         self.interp = 0
         self.stop = False
         self.setCols(cols)
+        self.bound = (0, 1, 0, 1)
+        self.region = None
 
     def setCols(self, cols, reset_region=True):
         points = tuple((pt[cols[0]], pt[cols[1]]) for pt in self.all_buffer)
@@ -73,32 +75,32 @@ class Corpus():
         self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
 
     def getScalingFactor(self):
-        targetArea = 0
-        nPair = 0
+        target_area = 0
+        npair = 0
         average_dist = 0
         for point in self.points:
             for near in point.near:
-                nPair += 1
-                midX ,midY = point.midTo(near)
-                targetArea += 1 / self.h_dist(midX, midY)**2
-        return self.l0_uni * np.sqrt(nPair / targetArea)
+                npair += 1
+                midx ,midy = point.midTo(near)
+                target_area += 1 / self.h_dist(midx, midy)**2
+        return self.l0_uni * np.sqrt(npair / target_area)
 
     def preUniformization(self, init=True):
         c, s = self.region_inbox
         x1, y1, x2, y2 = c[0]-s, c[1]-s, c[0]+s, c[1]+s
-        allPoints = list(self.points[:]) # copy to preserve initial sorting of self.points
-        nbPoints = len(allPoints)
-        allPoints.sort(key=Point.getX)
-        for i in range(nbPoints):
-            allPoints[i].x = (i / (nbPoints - 1)) * (x2 - x1) + x1
-        allPoints.sort(key=Point.getY)
-        for i in range(nbPoints):
-            allPoints[i].y = (i / (nbPoints - 1)) * (y2 - y1) + y1
+        all_points = list(self.points[:]) # copy to preserve initial sorting of self.points
+        npoints = len(all_points)
+        all_points.sort(key=Point.getX)
+        for i in range(npoints):
+            all_points[i].x = (i / (npoints - 1)) * (x2 - x1) + x1
+        all_points.sort(key=Point.getY)
+        for i in range(npoints):
+            all_points[i].y = (i / (npoints - 1)) * (y2 - y1) + y1
 
     def delaunayTriangulation(self):
-        allCoord = [[pt.x, pt.y] for pt in self.points]
-        allCoord = np.asarray(allCoord)
-        triangulation = Delaunay(allCoord)
+        all_coord = [[pt.x, pt.y] for pt in self.points]
+        all_coord = np.asarray(all_coord)
+        triangulation = Delaunay(all_coord)
         self.updateNearPoints(triangulation)
         return triangulation
     
@@ -136,26 +138,26 @@ class Corpus():
         k = 1
         # variable initialization
         self.stop = False
-        hScale = self.l0_uni
+        hscale = self.l0_uni
         tot_count = 0
         tri_count = 0
-        updateTri = True
+        update_tri = True
         exit = False
         # main loop
         while not exit:
             exit = True
             # update triangulation if necessary
-            if updateTri:
+            if update_tri:
                 tri_count += 1
                 self.delaunayTriangulation()
-                updateTri = False
+                update_tri = False
             # compute rest length scaling factor
-            hScale = self.getScalingFactor()
+            hscale = self.getScalingFactor()
             # sum repulsive actions for each point
             for point in self.points: 
                 for near in point.near:
                     midX ,midY = point.midTo(near)
-                    f = k * (int_pres * hScale / self.h_dist(midX, midY) - point.distTo(near))
+                    f = k * (int_pres * hscale / self.h_dist(midX, midY) - point.distTo(near))
                     if f > 0:
                         near.repulsiveForce(dt * f, point)
             # second loop after all forces computation
@@ -169,8 +171,8 @@ class Corpus():
                 # update point positions
                 point.update(self.bounds)
                 # check if triangulation needs to be updated
-                if not updateTri and point.distFromOrigin() / self.l0_uni > tri_tol:
-                    updateTri = True
+                if not update_tri and point.distFromOrigin() / self.l0_uni > tri_tol:
+                    update_tri = True
             # Increment step counter
             tot_count += 1
             # intermediary export to max
@@ -241,9 +243,9 @@ class Point():
         self.near = []
     
     def midTo(self, point):
-        midX = (self.x + point.x)/2
-        midY = (self.y + point.y)/2
-        return midX, midY
+        midx = (self.x + point.x)/2
+        midy = (self.y + point.y)/2
+        return midx, midy
 
     def getX(self):
         return self.x
@@ -282,10 +284,10 @@ class Point():
         self.near = []
         
     def moveTo(self, coords):
-        nextX = coords[0]
-        nextY = coords[1]
-        self.push_x = nextX - self.x
-        self.push_y = nextY - self.y
+        nextx = coords[0]
+        nexty = coords[1]
+        self.push_x = nextx - self.x
+        self.push_y = nexty - self.y
 
     def moveDist(self):
         return np.sqrt(self.push_x ** 2 + self.push_y ** 2)
