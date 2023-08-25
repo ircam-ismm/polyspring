@@ -157,14 +157,14 @@ class Corpus():
                     midX ,midY = point.midTo(near)
                     f = k * (int_pres * hscale / self.h_dist(midX, midY) - point.distTo(near))
                     if f > 0:
-                        near.repulsiveForce(dt * f, point)
+                        near.repulsiveForce(dt * f, point) # update push vector with force from near point
             # second loop after all forces computation
             for point in self.points: 
                 # check stop condition if inside region, else move it back inside
-                if point.shap.within(self.region):
+                if point.shap.within(self.region): # shap point is already pushed
                     if exit and point.moveDist() / self.l0_uni > stop_tol: 
                         exit = False
-                else:
+                else: # move points back into region (how exactly?)
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
                 # update point positions
                 point.update(self.bounds)
@@ -238,7 +238,7 @@ class Point():
         self.prev_y = normalized_y
         self.push_x = 0.0 # amount of pushing for next step
         self.push_y = 0.0
-        self.near = []
+        self.near = [] # references to indices of points connected by triangles
     
     def midTo(self, point):
         midx = (self.x + point.x)/2
@@ -275,7 +275,7 @@ class Point():
         self.prev_x = self.x
         self.prev_y = self.y
         
-    def distFromOrigin(self):
+    def distFromOrigin(self): # distance to position at last triangulation
         return np.sqrt((self.x-self.prev_x)**2 + (self.y-self.prev_y)**2)
     
     def resetNear(self):
