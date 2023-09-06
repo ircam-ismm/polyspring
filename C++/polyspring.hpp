@@ -47,12 +47,21 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 */
 
 
-// apply lambdd on each block buffer of size bufsize, keep corresponding offset into contiguous vector
+#include <cmath>
+#include <vector>
+#include <numeric>      // for iota
+#include <algorithm>    // for sort
+
+
+///////////////////////////////////////////////////////////////////////////////
+// UTILITIES
+
+// apply lambda on each block buffer of size bufsize, keep corresponding offset into contiguous vector
 // https://stackoverflow.com/questions/66224510/simplest-way-to-pass-a-lambda-as-a-method-parameter-in-c17:
 // - use type-erasing wrapper:
 // void blockwise (int numbuffers, int bufsize[], CoordT *buffers[], std::function< void (int bufsize, CoordT *buffer, int offset)> func)
 // - use template to deduce type:
-template<typename F>
+template<typename CoordT, typename F>
 void blockwise (int numbuffers, int bufsizes[], CoordT *buffers[], F&& func)
 {
   int offset = 0;
@@ -64,22 +73,47 @@ void blockwise (int numbuffers, int bufsizes[], CoordT *buffers[], F&& func)
   }
 }
 
-// 
+// vector function wrappers
+template<typename CoordT>
 void copy_with_strides (int num, CoordT *src, int srcstride, CoordT *dest, int deststride)
 {
 }
+
+template<typename CoordT>
+std::vector<CoordT> vector_add(std::vector<CoordT> &a, std::vector<CoordT> &b)
+{
+  return a; // a + b
+}
+
+template<typename CoordT>
+std::vector<CoordT> vector_mul(std::vector<CoordT> &a, std::vector<CoordT> &b)
+{
+  return a; // a * b
+}
+
+template<typename CoordT>
+void vector_norm(std::vector<CoordT> &norm, std::vector<CoordT> &vec)
+{
+  ; // norm = sqrt(vec_x ^ 2 + vec_y ^ 2);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Regions
 
 // interface for region
 template<typename CoordT>
 class Region
 {
+public:
   virtual bool point_is_within (CoordT x, CoordT y) = 0;
   virtual void move_point_back (CoordT &x, CoordT &y) = 0;
-}
+};
 
 template<typename CoordT>
-class SquareRegion : public Region
+class SquareRegion : public Region<CoordT>
 {
+public:
   virtual bool point_is_within (CoordT x, CoordT y) override
   {
     return x >= 0  &&  x <= 1  &&  y >= 0  &&  y <= 1;
@@ -92,7 +126,7 @@ class SquareRegion : public Region
     if (y < 0)  y = 0;
     if (y > 1)  y = 1;
   }
-} // end class SquareRegion
+}; // end class SquareRegion
 
 
 // macros for accessing x/y in interleaved vectors
@@ -100,18 +134,25 @@ class SquareRegion : public Region
 #define y(index) ((index) * 2 + 1)
 
 
+///////////////////////////////////////////////////////////////////////////////
 template<typename CoordT>
 struct Edges
 { // built from triangulation, needs to be updated after point moved
-  std::vector<CoordT> length_;
-  std::vector<CoordT> dist_; // interleaved vector of distances x/y
-  //float mid_x, mid_y;// only needed for h_dist
-  std::vector<CoordT> h_dist_; // evaluated at mid_x/y
-  std::vector<int>    a_, b_;	// indices into Points to end points
+  int numedges_ = 0;
+  std::vector<CoordT> length_;	// length of edge = norm of dist_
+  std::vector<CoordT> dist_;	// interleaved x/y vector of edge length
+  //float mid_x, mid_y;// only needed for h_dist calculation
+  std::vector<CoordT> h_dist_;  // vector of target density evaluated at mid_x/y
+  std::vector<int>    a_, b_;	// indices into Points arrays to end points
   const double	edge_correction_ = 2;	// factor taking into account that we store unique edges, while python code visits every ege twice via the near list of point a containing b and reciprocally b containing a
+  CoordT (*get_h_)(CoordT x, CoordT y);
+
+  Edges (CoordT (*hfunc)(CoordT x, CoordT y))
+  : get_h_(hfunc) {}
 
   void init (int num)
   {
+    numedges_ = num;
     //TDB: .clear()?
     length_.resize(num);
     dist_.resize(num * 2);
@@ -123,11 +164,9 @@ struct Edges
   // build edges list from interleaved triangle vertex index list
   void set (std::vector<int> &tri)
   {
-    assert(tri.size() == 3 * length.size());
+    assert(tri.size() == 3 * numedges_);
 
     // check if edge a, b or b, a already exists
-
-    update();
   }
 
   // update edges after points have moved
@@ -143,20 +182,36 @@ struct Edges
 	h_dist = get_h(midx, midy);
     }
 */
-    for (int i = 0; i < length_.size(); i++)
+    for (int i = 0; i < numedges_; i++)
     {
       dist_[x(i)] = points[x(b_[i])] - points[x(a_[i])];
       dist_[y(i)] = points[y(b_[i])] - points[y(a_[i])];
     }
-    vector_norm(dist_, length_); // length = sqrt(dist_x ^ 2 + dist_y ^ 2);
+    vector_norm(length_, dist_); // length = sqrt(dist_x ^ 2 + dist_y ^ 2);
 
-    for (int i = 0; i < length_.size(); i++)
+    for (int i = 0; i < numedges_; i++)
     { // get middle point and lookup density function
       CoordT midx = points[x(a_[i])] + 0.5 * dist_[x(i)];
       CoordT midy = points[y(a_[i])] + 0.5 * dist_[y(i)];
-      h_dist_[i] = get_h(midx, midy);
+      h_dist_[i]  = get_h_(midx, midy);
     }
-   }
+  } // end Edges::update ()
+
+  // called after setting/updating edges
+  double scaling_factor ()
+  { /* for point in self.points:
+	   for near in point.near:
+		npair += 1
+		midx ,midy = point.midTo(near)
+		target_area += 1 / self.h_dist(midx, midy)**2 
+      return self.l0_uni * np.sqrt(npair / target_area)
+ */
+     // loop over edges (do over precalculated density h at edges midpoints)
+    //double target_area = sum(1. / (h_dist_ * h_dist_) * edge_correction_);
+    double target_area = 1; // sum(1. / vector_mul(h_dist_, h_dist_) * edge_correction_);
+    
+    return sqrt(numedges_ / target_area);
+  }
 
   // apply spring repulsive force f to edge index i's end points' push vectors
   void apply_force (int i, double f, std::vector<CoordT> &push)
@@ -169,7 +224,7 @@ struct Edges
             self.x + self.push_x,
             self.y + self.push_y) # update the shapely point now for outside observation
 */
-    double angle = arctan2(dist_[y(i)], dist_[x(i)]);
+    double angle = atan2((double) dist_[y(i)], (double) dist_[x(i)]);
     push[x(a_[i])] += f * cos(angle);
     push[y(a_[i])] += f * sin(angle);
     push[x(b_[i])] -= f * cos(angle);
@@ -178,21 +233,97 @@ struct Edges
 }; // end struct Edges
 
 
+///////////////////////////////////////////////////////////////////////////////
 template<typename CoordT>
-struct Points
+struct Triangulation
 {
-  std::vector<CoordT> points_;	// normalised interleaved point coords 0..1, created by pre-uniformisation
-  std::vector<CoordT> push_;	// interleaved displacement vector x/y
+  std::vector<CoordT> tripoints_;	// interleaved(!) array of coordinates for delaunay triangulation, need to keep for use in dist_since_triangulation
+  std::vector<int> vertices_;		// interleaved(!) array of triangle vertex indices (into tripoints array)
+
+  int count_ = 0;
 
   void init (int num)
   {
+    tripoints_.reserve(num * 2); // don't init elements, will be overwritten by triangulate()
+    count_ = 0;
+  }
+
+  void triangulate (std::vector<CoordT> &points)
+  {
+    tripoints_.assign(points.begin(), points.end());
+
+    // call delaunay triangulation
+    
+    
+    count_++;
+  }
+
+  std::vector<int> &get_vertices() { return vertices_; }
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+template<typename CoordT>
+struct Points
+{
+  int numpoints_ = 0;
+  std::vector<CoordT> points_;	// normalised interleaved point coords 0..1, created by pre-uniformisation
+  std::vector<CoordT> push_;	// interleaved displacement vector x/y
+
+  std::vector<CoordT> &get_points_interleaved() { return points_; }
+
+  void init (int num)
+  {
+    numpoints_ = num;
     points_.resize(num * 2);
     push_.resize(num * 2);
   }
 
+  void set (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
+  {
+    numpoints_ = numtotal;
+    points_.resize(2 * numtotal);
+    blockwise(numbuffers, bufsizes, buffers,
+	      [&](int bufsize, CoordT *buffer, int offset) -> void
+	      {
+		copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data(),     2);
+		copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + 1, 2);
+	      });
+  }
+  
+  void pre_uniformize ()
+  { // replace points (in descriptor coordinates) by normalised sort index
+    // create rank array of size numframes
+    std::vector<size_t> indices(numpoints_);
+
+    // for each column
+    for (int colind = 0; colind < 2; colind++)
+    {
+      // fill rank array with 0..numframes
+      std::iota(begin(indices), end(indices), static_cast<size_t>(0));
+
+      // sort rank array with indirection to data
+      std::sort(
+        begin(indices), end(indices),
+        [&](size_t a, size_t b)
+        {
+          // ascending order, such that small elements get small indices
+          return points_[a * 2 + colind] < points_[b * 2 + colind];
+        }
+      );
+      
+      // scale to 0..1 and copy order of elem back to points
+      for (size_t i = 0; i < numpoints_; i++)
+      {
+        size_t order = indices[i];
+	points_[order * 2 + colind] = (float) i / (numpoints_ - 1);
+      }
+    } // end for colind
+  } // end Points::pre_uniformize ()
+  
   void update ()
   {
-    points_ += push_;
+    vector_add(points_, push_);    // points_ += push_;
   }
 
   void end_iteration ()
@@ -200,14 +331,14 @@ struct Points
     std::fill(push_.begin(), push_.end(), 0);
   }
   
-  bool within_region (int i, Region &region)
+  bool within_region (int i, Region<CoordT> *region)
   {
-    return region.point_is_within(points_[x(i)], points_[y(i)]);
+    return region->point_is_within(points_[x(i)], points_[y(i)]);
   }
 
-  void move_point_back (int i, Region &region)
+  void move_point_back (int i, Region<CoordT> *region)
   {
-    region.move_back(points_[x(i)], points_[y(i)]); // changes points coords
+    region->move_point_back(points_[x(i)], points_[y(i)]); // changes points coords
   }
 
   CoordT norm (CoordT x1, CoordT y1)
@@ -220,121 +351,74 @@ struct Points
     return norm(push_[x(i)], push_[y(i)]);
   }
 
-  CoordT dist_since_triangulation (int i, Triangulation &tri)
+  CoordT dist_since_triangulation (int i, Triangulation<CoordT> &tri)
   {
     return norm(points_[x(i)] - tri.tripoints_[x(i)], points_[y(i)] - tri.tripoints_[y(i)]);
   }
-};
+}; // end struct Points
 
 
-template<typename CoordT>
-struct Triangulation
-{
-  std::vector<CoordT> tripoints_;	// interleaved(!) array of coordinates for delaunay triangulation, need to keep for use in dist_since_triangulation
-
-  int count_ = 0;
-
-  void init (int num)
-  {
-    tripoints_.reserve(num * 2); // don't init elements, will be overwritten by triangulate()
-    count = 0;
-  }
-
-  void triangulate (std::vector<CoordT> &points)
-  {
-    tripoints_.assign(points.begin(), points.end());
-
-    // call delaunay triangulation
-    
-    
-    count_++;
-  }
-};
-
-
+///////////////////////////////////////////////////////////////////////////////
 template<typename CoordT>
 class Polyspring
 {
+public:
   // simulation parameters
-  dt	    = 0.2;   // simulation step
-  tri_tol_  = 0.1;   // displacement threshold (relative to l0_uni) for retriangularisation
-  int_pres_ = 1.2;   // spring pressure
-  k_	    = 1;     // spring stiffness (supposing mass = 1)
+  double dt_	   = 0.2;   // simulation step
+  double tri_tol_  = 0.1;   // displacement threshold (relative to l0_uni) for retriangularisation
+  double int_pres_ = 1.2;   // spring pressure
+  double k_	   = 1;     // spring stiffness (supposing mass = 1)
+  double stop_tol_ = 0.001;
       
   //h_dist: function to get target distance for point
   Region<CoordT>	*region_ = NULL;
 
   Points<CoordT>	points_;	// points
   Triangulation<CoordT> triangulation_;	// wrapper around delaunay triangulation
-  Edges<CoordT>		edges_;		// list of edges
+  Edges<CoordT>		edges_;		// keeps list of edges
   double		l0_uni_;	// spring rest length
   int			count_ = 0;
-  
-  void set_region (std::string name);
-  void set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly);   // copy points from buffers into vector, do rescaling 
-  double get_scaling_factor (); //todo: move to edges
+  bool			update_tri_ = false;
 
+public:
+  Polyspring ()
+  : edges_(get_h) {}
+
+  void set_region (std::string name);
+  void set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly);   // copy points from buffers into vector, do rescaling and pre-uniformisation
+  static CoordT get_h (CoordT x, CoordT y) { return 1; } // TODO: evaluate target density function at point
   bool iterate ();
+  int get_count() { return count_; };
+  int get_triangulation_count() { return triangulation_.count_; };
 };
 
 
 // copy points from buffers into vector, do rescaling
-void Polyspring::set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
+template<typename CoordT>
+void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
 {
-  points_.resize(2 * numtotal);
-  blockwise(numbuffers, bufsizes, buffers,
-	    [&](int bufsize, CoordT *buffer, int offset) -> void
-	    {
-	      copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data(),     2);
-	      copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + 1, 2);
-	    });
-
+  points_.set(numtotal, numbuffers, bufsizes, buffers, bufwidth, colx, coly);
   // get min/max x/y
 
   // set default region 0..1 square, signed distance function, inner box
   double area = 1;
 
-  // scale points to fit into region
-
+  // pre-uniformization, replaces points by normalised sort index
+  // and scale points to fit into region
+  points_.pre_uniformize();
+    
   // compute the spring rest length
   // self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
   l0_uni_ = sqrt(2 / (sqrt(3) * numtotal / area));
   
   count_ = 0;
-}
-
-// called after updating edges
-double Polyspring::get_scaling_factor ()
-{
-  double target_area = 0;
-  int	 npair = 0;
-  /*
-  for point in self.points:
-    for near in point.near:
-      npair += 1
-      midx ,midy = point.midTo(near)
-      target_area += 1 / self.h_dist(midx, midy)**2 
-  return self.l0_uni * np.sqrt(npair / target_area)
-  */
-  
-  // loop over edges
-  for (auto e: edges_) // do over precalculated density h at edges midpoints
-    target_area += 1. / (e.h_dist * e.h_dist) * edge_correction;
-
-  return l0_uni * sqrt(edges_.size() / target_area);
-}
-
-
-void Polyspring::prepare ()
-{
-  if (first iter)
-    // pre-uniformization, replaces points by normalised sort index
-    points_.pre_uniformize();
+  update_tri_ = true;
 }
 
 
 // main loop
-bool Polyspring::iterate ()
+template<typename CoordT>
+bool Polyspring<CoordT>::iterate ()
 {
   // update triangulation if necessary
 /* 	  if update_tri:
@@ -344,13 +428,14 @@ bool Polyspring::iterate ()
 */
   if (update_tri_)
   {
-    triangulation_.triangulate(points_);
-    edges_.set(triangulation_.vertices);	// construct edges list
+    triangulation_.triangulate(points_.get_points_interleaved());
+    edges_.set(triangulation_.get_vertices());	// construct edges list
+    edges_.update(points_.get_points_interleaved());
     update_tri_ = false;
   }
 		  
   // compute rest length scaling factor
-  double hscale = get_scaling_factor();
+  double hscale = l0_uni_ * edges_.scaling_factor();
 
   // sum repulsive actions for each point
   /* for point in self.points: 
@@ -362,11 +447,11 @@ bool Polyspring::iterate ()
   */
 
   // calculate spring forces 
-  for (int i = 0; i < edges_.length_.size(); i++) // loop over over precalculated edge length and density h at edges midpoints
+  for (int i = 0; i < edges_.numedges_; i++) // loop over over precalculated edge length and density h at edges midpoints
   {
     double f = k_ * (int_pres_ * hscale / edges_.h_dist_[i] - edges_.length_[i]); // TODO: vectorise this loop, second loop with apply_force
     if (f > 0)
-      apply_force(i, dt * f, points_.push_); // update edge's end points' push vectors with force from spring
+      edges_.apply_force(i, dt_ * f, points_.push_); // update edge's end points' push vectors with force from spring
   }
 		  
   // move point positions, but leave push
@@ -381,36 +466,34 @@ bool Polyspring::iterate ()
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0]) ?????
   */
   bool keep_going = true;
-  for (int i = 0; /* keep_going  && */ i < numpoints; i++)
+  for (int i = 0; /* keep_going  && */ i < points_.numpoints_; i++)
   { // check stop condition if inside region, else move it back inside
-    if (points_.within_region(i, region))
+    if (points_.within_region(i, region_))
     {
-      if (points_.dist_moved(i) / l0_uni <= stop_tol)
+      if (points_.dist_moved(i) / l0_uni_ <= stop_tol_)
       {
 	keep_going = false;
 	break;
       }
     }
     else
-      move_point_back(i, region);
+      points_.move_point_back(i, region_);
   }
-		  
+
   // if live update, rescale to descr. coordinates and write to output buffers
   //points_.get(bounds, outbuffers);
   
   // update edges after points have moved
   edges_.update(points_.points_);
-  /* NOT: for (auto e: edges_)
-     {
-     e.dist_x += push_[2 * e.b]     - push_[2 * e.a];
-     e.dist_y += push_[2 * e.b + 1] - push_[2 * e.a + 1];
-     }
-  */
+  /* NOT: for (auto e: edges_)     {
+		e.dist_x += push_[2 * e.b]     - push_[2 * e.a];
+		e.dist_y += push_[2 * e.b + 1] - push_[2 * e.a + 1];
+	   }  */
 
   // loop over points, 
   // check if triangulation needs to be updated: moved from prev_x/y more than tri_tol thresh
-  for (i = 0; i < numpoints; i++) // todo: vectorise, mostly goes through all points
-    if (points_.dist_since_triangulation(i, triangulation_) / l0_uni_ > tri_tol)
+  for (int i = 0; i < points_.numpoints_; i++) // todo: vectorise, mostly goes through all points
+    if (points_.dist_since_triangulation(i, triangulation_) / l0_uni_ > tri_tol_)
     {
       update_tri_ = true;
       break;
@@ -420,4 +503,4 @@ bool Polyspring::iterate ()
   points_.end_iteration();
 
   return keep_going;
-} // end train ()
+} // end Polyspring::iterate ()
