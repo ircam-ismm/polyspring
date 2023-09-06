@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
   poly.set_points(bufsize, 1, &bufsize, buf, width, 0, 1);
   print_points("set", bufsize, poly.points_.get_points_interleaved().data());
 
-  while (poly.iterate()  &&  poly.get_count() < 10)
+  while (poly.iterate()  &&  poly.get_count() < 100)
   {
     printf("iter %d, tri %d\n", poly.get_count(), poly.get_triangulation_count());
     print_points("", bufsize, poly.points_.get_points_interleaved().data());
