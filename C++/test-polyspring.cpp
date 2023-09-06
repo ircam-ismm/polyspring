@@ -1,18 +1,10 @@
 /* -*-mode:c; c-basic-offset: 2-*- */
+/* compile and run with:
+   c++ -std=c++17 -g -fsanitize=address -fno-omit-frame-pointer -Idelaunator-cpp/include/ test-polyspring.cpp && ./a.out
+ */
 
 #include "stdio.h"
 #include "polyspring.hpp"
-
-void print_points(const char * msg, int num, float *buf)
-{
-  if (msg && msg[0])
-    printf("%s\n", msg);
-  
-  for (int i = 0; i < num; i++)
-    printf("%6.3f %6.3f\n", buf[i * 2], buf[i * 2 + 1]);
-
-  printf("\n");
-}
 
 int main (int argc, char *argv[])
 {
@@ -32,10 +24,10 @@ int main (int argc, char *argv[])
   Polyspring<float> poly;
 
   // set corpus, copies blocks (buffers) into points array
-  poly.set_points(bufsize, 1, &bufsize, (float **) &buffer, width, 0, 1);
+  poly.set_points(bufsize, 1, &bufsize, buf, width, 0, 1);
   print_points("set", bufsize, poly.points_.get_points_interleaved().data());
 
-  while (poly.iterate())
+  while (poly.iterate()  &&  poly.get_count() < 10)
   {
     printf("iter %d, tri %d\n", poly.get_count(), poly.get_triangulation_count());
     print_points("", bufsize, poly.points_.get_points_interleaved().data());

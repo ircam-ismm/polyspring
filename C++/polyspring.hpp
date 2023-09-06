@@ -51,10 +51,27 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 #include <vector>
 #include <numeric>      // for iota
 #include <algorithm>    // for sort
-
+#include "delaunator.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITIES
+
+void print_points (const char * msg, int num, float *buf)
+{
+  if (msg && msg[0])
+    printf("%s\n", msg);
+  
+  for (int i = 0; i < num; i++)
+    printf("%6.3f %6.3f\n", buf[i * 2], buf[i * 2 + 1]);
+
+  printf("\n");
+}
+
+template<typename T>
+void vector_print (const char * msg, std::vector<T> v)
+{
+  print_points(msg, v.size() / 2, v.data());
+}
 
 // apply lambda on each block buffer of size bufsize, keep corresponding offset into contiguous vector
 // https://stackoverflow.com/questions/66224510/simplest-way-to-pass-a-lambda-as-a-method-parameter-in-c17:
@@ -73,28 +90,48 @@ void blockwise (int numbuffers, int bufsizes[], CoordT *buffers[], F&& func)
   }
 }
 
+
+// macros for accessing x/y in interleaved vectors
+#define x(index) ((index) * 2)
+#define y(index) ((index) * 2 + 1)
+
+
 // vector function wrappers
 template<typename CoordT>
 void copy_with_strides (int num, CoordT *src, int srcstride, CoordT *dest, int deststride)
 {
+  for (int i = 0; i < num; i++)
+  {
+    *dest = *src;
+    dest += deststride;
+    src  += srcstride;
+  }
 }
 
 template<typename CoordT>
-std::vector<CoordT> vector_add(std::vector<CoordT> &a, std::vector<CoordT> &b)
-{
-  return a; // a + b
+void vector_add(std::vector<CoordT> &a, std::vector<CoordT> &b)
+{ // a + b
+  for (int i = 0; i < a.size(); i++)
+    a[i] += b[i];
 }
-
+/*
 template<typename CoordT>
 std::vector<CoordT> vector_mul(std::vector<CoordT> &a, std::vector<CoordT> &b)
-{
-  return a; // a * b
+{ // a + b
+  std::vector<CoordT> ret(a);
+  for (int i = 0; i < a.size(); i++)
+    ret[i] *= b[i];
+  return ret;
 }
+*/
 
 template<typename CoordT>
-void vector_norm(std::vector<CoordT> &norm, std::vector<CoordT> &vec)
-{
-  ; // norm = sqrt(vec_x ^ 2 + vec_y ^ 2);
+std::vector<CoordT> vector_norm (std::vector<CoordT> &a)
+{ // norm = sqrt(vec_x ^ 2 + vec_y ^ 2);
+  std::vector<CoordT> norm(a.size() / 2);
+  for (int i = 0; i < norm.size(); i++)
+    norm[i] += sqrt(a[x(i)] * a[x(i)] + a[y(i)] * a[y(i)]);
+  return norm;
 }
 
 
@@ -129,10 +166,6 @@ public:
 }; // end class SquareRegion
 
 
-// macros for accessing x/y in interleaved vectors
-#define x(index) ((index) * 2)
-#define y(index) ((index) * 2 + 1)
-
 
 ///////////////////////////////////////////////////////////////////////////////
 template<typename CoordT>
@@ -157,16 +190,37 @@ struct Edges
     length_.resize(num);
     dist_.resize(num * 2);
     h_dist_.resize(num);
-    a_.resize(num);
-    b_.resize(num);
+    a_.clear();
+    b_.clear();
+    a_.reserve(num);
+    b_.reserve(num);
   }
 
-  // build edges list from interleaved triangle vertex index list
-  void set (std::vector<int> &tri)
+  void add (int a, int b)
   {
-    assert(tri.size() == 3 * numedges_);
+    a_.push_back(a);
+    b_.push_back(b);
+  }
 
-    // check if edge a, b or b, a already exists
+  // build edges end point lists from interleaved triangle vertex index list
+  void set (std::vector<size_t> &tri)
+  {
+    int numtri = tri.size() / 3;
+    init(numtri * 3); // each triangle contributes 3 edges
+
+    // go through triangles, add each of the 3 edges between the 3 points (indices a, b, c)
+    for (int i = 0; i < numtri; i++)
+    { // vertex point indices into points array
+      int a = tri[i * 3];
+      int b = tri[i * 3 + 1];
+      int c = tri[i * 3 + 2];
+      
+      add(a, b);
+      add(b, c);
+      add(c, a);
+    }
+
+    //TODO: check if edge a, b or b, a already exists, remove, resize other vectors
   }
 
   // update edges after points have moved
@@ -187,7 +241,7 @@ struct Edges
       dist_[x(i)] = points[x(b_[i])] - points[x(a_[i])];
       dist_[y(i)] = points[y(b_[i])] - points[y(a_[i])];
     }
-    vector_norm(length_, dist_); // length = sqrt(dist_x ^ 2 + dist_y ^ 2);
+    length_ = vector_norm(dist_); // length = sqrt(dist_x ^ 2 + dist_y ^ 2);
 
     for (int i = 0; i < numedges_; i++)
     { // get middle point and lookup density function
@@ -208,10 +262,12 @@ struct Edges
  */
      // loop over edges (do over precalculated density h at edges midpoints)
     //double target_area = sum(1. / (h_dist_ * h_dist_) * edge_correction_);
-    double target_area = 1; // sum(1. / vector_mul(h_dist_, h_dist_) * edge_correction_);
+    double target_area = 0;
+    for (int i = 0; i < numedges_; i++)
+      target_area += 1. / (h_dist_[i] * h_dist_[i] * edge_correction_);
     
     return sqrt(numedges_ / target_area);
-  }
+  } // end Edges::scaling_factor ()
 
   // apply spring repulsive force f to edge index i's end points' push vectors
   void apply_force (int i, double f, std::vector<CoordT> &push)
@@ -237,9 +293,9 @@ struct Edges
 template<typename CoordT>
 struct Triangulation
 {
-  std::vector<CoordT> tripoints_;	// interleaved(!) array of coordinates for delaunay triangulation, need to keep for use in dist_since_triangulation
-  std::vector<int> vertices_;		// interleaved(!) array of triangle vertex indices (into tripoints array)
-
+  std::vector<double> tripoints_;	// interleaved(!) array of coordinates for delaunay triangulation (must be double for delaunator), need to keep for use in dist_since_triangulation
+  std::vector<size_t> *vertices_;	// interleaved(!) array of triangle vertex indices (into tripoints array)
+  delaunator::Delaunator *del_ = NULL;
   int count_ = 0;
 
   void init (int num)
@@ -250,15 +306,17 @@ struct Triangulation
 
   void triangulate (std::vector<CoordT> &points)
   {
-    tripoints_.assign(points.begin(), points.end());
+    tripoints_.assign(points.begin(), points.end()); // copy input points and convert to double
 
-    // call delaunay triangulation
-    
-    
+    // setup and call delaunay triangulation
+    if (del_) delete del_;
+    del_ = new delaunator::Delaunator(tripoints_);
+    vertices_ = &del_->triangles;
+
     count_++;
   }
 
-  std::vector<int> &get_vertices() { return vertices_; }
+  std::vector<size_t> &get_vertices() { return *vertices_; }
 };
 
 
@@ -283,6 +341,7 @@ struct Points
   {
     numpoints_ = numtotal;
     points_.resize(2 * numtotal);
+    push_.resize(2 * numtotal);
     blockwise(numbuffers, bufsizes, buffers,
 	      [&](int bufsize, CoordT *buffer, int offset) -> void
 	      {
@@ -382,7 +441,9 @@ public:
 
 public:
   Polyspring ()
-  : edges_(get_h) {}
+  : edges_(get_h),	// default: uniform
+    region_(new SquareRegion<CoordT>) // default region
+  {}
 
   void set_region (std::string name);
   void set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly);   // copy points from buffers into vector, do rescaling and pre-uniformisation
@@ -453,7 +514,9 @@ bool Polyspring<CoordT>::iterate ()
     if (f > 0)
       edges_.apply_force(i, dt_ * f, points_.push_); // update edge's end points' push vectors with force from spring
   }
-		  
+
+  //vector_print("push", points_.push_);
+  
   // move point positions, but leave push
   points_.update();
 
@@ -502,5 +565,6 @@ bool Polyspring<CoordT>::iterate ()
   // set push to 0
   points_.end_iteration();
 
+  count_++;
   return keep_going;
 } // end Polyspring::iterate ()
