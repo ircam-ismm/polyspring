@@ -10,6 +10,8 @@
 		21E161E52AA8854F006ED5FE /* test-polyspring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E161E42AA8854F006ED5FE /* test-polyspring.cpp */; };
 		21E1620C2AA88791006ED5FE /* delaunator.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E161FE2AA88761006ED5FE /* delaunator.hpp */; };
 		21E1620E2AA8ADCD006ED5FE /* polyspring.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */; };
+		21E1621D2AAA07F6006ED5FE /* lo.h in Sources */ = {isa = PBXBuildFile; fileRef = 21E162172AAA07E0006ED5FE /* lo.h */; };
+		21E1621F2AAA0F7F006ED5FE /* liblo.la in Frameworks */ = {isa = PBXBuildFile; fileRef = 21E1621E2AAA0F7F006ED5FE /* liblo.la */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +59,18 @@
 		21E1620A2AA88761006ED5FE /* .clang-format */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".clang-format"; sourceTree = "<group>"; };
 		21E1620B2AA88761006ED5FE /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = polyspring.hpp; path = ../polyspring.hpp; sourceTree = "<group>"; };
+		21E162102AAA07C6006ED5FE /* liblo.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblo.7.dylib; path = ../../../../../../sw/lib/liblo.7.dylib; sourceTree = "<group>"; };
+		21E162132AAA07E0006ED5FE /* lo_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_cpp.h; sourceTree = "<group>"; };
+		21E162142AAA07E0006ED5FE /* lo_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_types.h; sourceTree = "<group>"; };
+		21E162152AAA07E0006ED5FE /* lo_serverthread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_serverthread.h; sourceTree = "<group>"; };
+		21E162162AAA07E0006ED5FE /* lo_macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_macros.h; sourceTree = "<group>"; };
+		21E162172AAA07E0006ED5FE /* lo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo.h; sourceTree = "<group>"; };
+		21E162182AAA07E0006ED5FE /* lo_endian.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_endian.h; sourceTree = "<group>"; };
+		21E162192AAA07E0006ED5FE /* lo_throw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_throw.h; sourceTree = "<group>"; };
+		21E1621A2AAA07E0006ED5FE /* lo_osc_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_osc_types.h; sourceTree = "<group>"; };
+		21E1621B2AAA07E0006ED5FE /* lo_lowlevel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_lowlevel.h; sourceTree = "<group>"; };
+		21E1621C2AAA07E0006ED5FE /* lo_errors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_errors.h; sourceTree = "<group>"; };
+		21E1621E2AAA0F7F006ED5FE /* liblo.la */ = {isa = PBXFileReference; lastKnownFileType = text; name = liblo.la; path = ../../../../../../sw/lib/liblo.la; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +78,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21E1621F2AAA0F7F006ED5FE /* liblo.la in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -73,10 +88,12 @@
 		21E161D12AA88531006ED5FE = {
 			isa = PBXGroup;
 			children = (
+				21E162122AAA07E0006ED5FE /* lo */,
 				21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */,
 				21E161E62AA88761006ED5FE /* delaunator-cpp */,
 				21E161DC2AA88531006ED5FE /* test polyspring */,
 				21E161DB2AA88531006ED5FE /* Products */,
+				21E1620F2AAA07C6006ED5FE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -197,6 +214,33 @@
 			path = scripts;
 			sourceTree = "<group>";
 		};
+		21E1620F2AAA07C6006ED5FE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				21E1621E2AAA0F7F006ED5FE /* liblo.la */,
+				21E162102AAA07C6006ED5FE /* liblo.7.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		21E162122AAA07E0006ED5FE /* lo */ = {
+			isa = PBXGroup;
+			children = (
+				21E162132AAA07E0006ED5FE /* lo_cpp.h */,
+				21E162142AAA07E0006ED5FE /* lo_types.h */,
+				21E162152AAA07E0006ED5FE /* lo_serverthread.h */,
+				21E162162AAA07E0006ED5FE /* lo_macros.h */,
+				21E162172AAA07E0006ED5FE /* lo.h */,
+				21E162182AAA07E0006ED5FE /* lo_endian.h */,
+				21E162192AAA07E0006ED5FE /* lo_throw.h */,
+				21E1621A2AAA07E0006ED5FE /* lo_osc_types.h */,
+				21E1621B2AAA07E0006ED5FE /* lo_lowlevel.h */,
+				21E1621C2AAA07E0006ED5FE /* lo_errors.h */,
+			);
+			name = lo;
+			path = ../../../../../../sw/include/lo;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -253,6 +297,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				21E1621D2AAA07F6006ED5FE /* lo.h in Sources */,
 				21E1620C2AA88791006ED5FE /* delaunator.hpp in Sources */,
 				21E1620E2AA8ADCD006ED5FE /* polyspring.hpp in Sources */,
 				21E161E52AA8854F006ED5FE /* test-polyspring.cpp in Sources */,
@@ -313,6 +358,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /sw/include;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -365,6 +411,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /sw/include;
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -375,6 +422,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = /sw/lib;
+				OTHER_LDFLAGS = "-llo";
+				OTHER_LIBTOOLFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -383,6 +433,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = /sw/lib;
+				OTHER_LDFLAGS = "-llo";
+				OTHER_LIBTOOLFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
