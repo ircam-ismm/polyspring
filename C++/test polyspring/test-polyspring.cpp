@@ -5,8 +5,9 @@
 
 #include "stdio.h"
 #include "unistd.h"	// sleep
+#include "time.h"	// clock
+#include "lo/lo.h"	// osc
 #include "polyspring.hpp"
-#include "lo/lo.h"
 
 lo_address addr;
 
@@ -39,7 +40,7 @@ void osc_close ()
   lo_address_free(addr);
 }
 
-void osc_send_buffer (int bufind, int numrows, float *buffer)
+void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig = NULL)
 {
   int stat = 0;
   stat += lo_send(addr, "/buffer_index", "i", bufind);
@@ -49,7 +50,14 @@ void osc_send_buffer (int bufind, int numrows, float *buffer)
   {
     float x = buffer[i * 2];
     float y = buffer[i * 2 + 1];
-    stat += lo_send(addr, "/append", "iffff", i, x, y, x, y);
+    float origx = x;
+    float origy = y;
+    if (orig)
+    {
+      origx = orig[i * 2];
+      origy = orig[i * 2 + 1];
+    }
+    stat += lo_send(addr, "/append", "iffff", i, origx, origy, x, y);
   }
   //stat += lo_send(addr, "/bounds", "ffff", ....);
   stat += lo_send(addr, "/done_init", "i", 1);
@@ -62,6 +70,24 @@ void osc_send_buffer (int bufind, int numrows, float *buffer)
 }
 
 
+int data_gen_linear (int bufsize, float **bufs)
+{
+  float *buffer = (float *) malloc(bufsize * 2 * sizeof(float));
+
+  for (int i = 0; i < bufsize; i++)
+  { // fill lower third
+    buffer[i * 2    ] = (float) i / bufsize;
+    buffer[i * 2 + 1] = (float) (i % 3) / bufsize;
+  }
+
+  bufs[0] = buffer;
+  return bufsize;
+}
+
+void data_load (int bufsize, float *buffer)
+{
+}
+
 int main (int argc, char *argv[])
 {
   if (!osc_open(NULL /*"127.0.0.1"*/, "8012"))
@@ -69,15 +95,10 @@ int main (int argc, char *argv[])
 
 // create test data
   int   width   = 2;
-  int   bufsize = 25;
-  float buffer[bufsize * width];
-  float *buf[1] = { buffer };
-
-  for (int i = 0; i < bufsize; i++)
-  { // fill lower third
-    buffer[i * 2    ] = (float) i / bufsize;
-    buffer[i * 2 + 1] = (float) (i % 3) / bufsize;
-  }
+  float *buf[1] = { NULL };
+  int   bufsize = data_gen_linear(1000 , buf);
+  float *buffer = buf[0];
+  
   print_points("init", bufsize, buffer);
 
   Polyspring<float> poly;
@@ -90,12 +111,19 @@ int main (int argc, char *argv[])
   bool keepgoing;
   do
   {
+    clock_t start_iter = clock();
     keepgoing = poly.iterate()  &&  poly.get_count() < 100;
+    clock_t stop_iter = clock();
+    float dur = (stop_iter - start_iter) / (float) CLOCKS_PER_SEC * 1000.;
+  
     printf("iter %d  tri %d  go %d\n", poly.get_count(), poly.get_triangulation_count(), keepgoing);
-    osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved().data());
+    osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved().data(), buffer);
     print_points("", bufsize, poly.points_.get_points_interleaved().data());
-    usleep(100 * 1000);
+    printf("iter %d  tri %d  go %d took %f ms\n", poly.get_count(), poly.get_triangulation_count(), keepgoing, dur);
+
+    usleep(std::max(0., (100 - dur) * 1000.));
   } while (keepgoing);
 
   osc_close();
+  free(buf[0]);
 }
