@@ -528,15 +528,15 @@ bool Polyspring<CoordT>::iterate ()
                 else:
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0]) ?????
   */
-  bool keep_going = true;
-  for (int i = 0; /* keep_going  && */ i < points_.numpoints_; i++)
+  bool keep_going = false;
+  for (int i = 0; i < points_.numpoints_; i++)
   { // check stop condition if inside region, else move it back inside
     if (points_.within_region(i, region_))
     {
-      if (points_.dist_moved(i) / l0_uni_ <= stop_tol_)
+      if (!keep_going  &&  points_.dist_moved(i) / l0_uni_ > stop_tol_)
       {
-	keep_going = false;
-	break;
+	printf("point %d moved %f,  norm %f > stop_tol %f\n", i, points_.dist_moved(i),  points_.dist_moved(i) / l0_uni_, stop_tol_);
+	keep_going = true; // any point moved more than stop tolerance: do one more iteration
       }
     }
     else
