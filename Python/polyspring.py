@@ -43,7 +43,7 @@ class Corpus():
         ymax = max(points, key=lambda pt : pt[1])[1]
         self.bounds = (xmin, xmax, ymin, ymax)
         # create points and initial spring length
-        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in self.all_buffer)
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds, index) for index, pt in enumerate(self.all_buffer))
         # reset region
         if reset_region:
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
@@ -81,6 +81,7 @@ class Corpus():
                 npair += 1
                 midx ,midy = point.midTo(near)
                 target_area += 1 / self.h_dist(midx, midy)**2
+                #print("point {} near {} h {}".format(point, near, self.h_dist(midx, midy))) #####db
         return self.l0_uni * np.sqrt(npair / target_area)
 
     def preUniformization(self, init=True):
@@ -100,6 +101,16 @@ class Corpus():
         all_coord = np.asarray(all_coord)
         triangulation = Delaunay(all_coord)
         self.updateNearPoints(triangulation)
+
+        ###db: copy triangulation result for sending and printing
+        self.simplices = triangulation.simplices
+        #print('tri', len(triangulation.simplices)) ###db
+        for (i, tri) in enumerate(triangulation.simplices):
+            p1 = self.points[tri[0]]
+            p2 = self.points[tri[1]]
+            p3 = self.points[tri[2]]
+            #print('%3d' % i, p1, p2, p3)
+
         return triangulation
     
     def updateNearPoints(self, triangulation):
@@ -151,6 +162,10 @@ class Corpus():
                 update_tri = False
             # compute rest length scaling factor
             hscale = self.getScalingFactor()
+
+            print("getScalingFactor", hscale);
+            #return
+            
             # sum repulsive actions for each point
             for point in self.points: 
                 for near in point.near:
@@ -164,7 +179,7 @@ class Corpus():
                 if point.shap.within(self.region): # shap point is already pushed
                     if exit and point.moveDist() / self.l0_uni > stop_tol: 
                         exit = False
-                else: # move points back into region (how exactly?)
+                else: # move points back into region (how exactly?) by setting push vector to ....
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
                 # update point positions
                 point.update(self.bounds)
@@ -220,7 +235,8 @@ class Corpus():
 
 class Point():
 
-    def __init__(self, x, y, bounds):
+    def __init__(self, x, y, bounds, i):
+        self.index = i
         self.scaled_og_x = x
         self.scaled_og_y = y
         self.scaled_x = x
@@ -307,10 +323,11 @@ class Point():
         self.shap = ShPoint(self.x, self.y)
 
     def __str__(self):
-        return str(self.x) + ' ' + str(self.y)
+        # return str(self.x) + ' ' + str(self.y)
+        return "%3d (%.3f, %.3f)" % (self.index, self.x, self.y)
 
     def __repr__(self):
-        return str(self.x) + ' ' + str(self.y)
+        return str(self.index) + ' ' + str(self.x) + ' ' + str(self.y)
 
 
 if __name__ == '__main__':

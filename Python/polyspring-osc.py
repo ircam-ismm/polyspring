@@ -34,6 +34,14 @@ class CorpusMax(Corpus):
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
                 else :
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:])
+
+        #db: export triangulations
+        fl = [int(item) for sublist in self.simplices for item in sublist]
+        print('export tri', self.simplices)
+        print('flat', fl)
+        print('type', type(fl), type(fl[0]))
+        self.client.send_message('/tri', fl)
+                    
         self.client.send_message('/step', 1)
 
 
