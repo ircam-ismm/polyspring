@@ -301,8 +301,8 @@ struct Edges
 template<typename CoordT>
 struct Triangulation
 {
-  std::vector<double> tripoints_;	// interleaved(!) array of coordinates for delaunay triangulation (must be double for delaunator), need to keep for use in dist_since_triangulation
-  std::vector<size_t> *vertices_;	// interleaved(!) array of triangle vertex indices (into tripoints array)
+  std::vector<double> tripoints_;	// interleaved(!) array of x/y coordinates for delaunay triangulation (must be double for delaunator), need to keep for use in dist_since_triangulation
+  std::vector<size_t> *vertices_;	// interleaved(!) array of triplets of triangle vertex indices (into tripoints array)
   delaunator::Delaunator *del_ = NULL;
   int count_ = 0;
 
@@ -322,6 +322,12 @@ struct Triangulation
     vertices_ = &del_->triangles;
 
     count_++;
+
+    // dbprint
+    for (int i = 0; i < vertices_->size(); i += 3)
+    {
+      printf("tri %3d: %3d %3d %3d\n", i / 3, (*vertices_)[i], (*vertices_)[i + 1], (*vertices_)[i + 2]);
+    }
   }
 
   std::vector<size_t> &get_vertices() { return *vertices_; }

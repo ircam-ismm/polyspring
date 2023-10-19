@@ -72,6 +72,26 @@ void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig, int w
   }
 }
 
+void osc_send_tri (std::vector<size_t> &vertices)
+{
+  int stat = 0;
+  int numv = vertices.size();
+  lo_message msg = lo_message_new();
+
+    for (int i = 0; i < numv; i++)
+  {
+    lo_message_add_int32(msg, vertices[i]);
+  }
+
+  stat += lo_send_message(addr, "/tri", msg);
+
+  if (stat < 0)
+  {
+    printf("osc_send_tri status %d, error %d '%s'\n", stat, lo_address_errno(addr), lo_address_errstr(addr));
+  }
+
+  lo_message_free(msg);
+}
 
 int data_gen_linear (int bufsize, float **bufs, int &width, int &xcol, int &ycol)
 {
@@ -135,16 +155,18 @@ int main (int argc, char *argv[])
   print_points("set", bufsize, poly.points_.get_points_interleaved(true).data());
 
   bool keepgoing;
+  const int numiter = 100;
   do
   {
     clock_t start_iter = clock();
-    keepgoing = poly.iterate()  &&  poly.get_count() < 100;
+    keepgoing = poly.iterate()  &&  poly.get_count() < numiter;
     clock_t stop_iter = clock();
     float dur = (stop_iter - start_iter) / (float) CLOCKS_PER_SEC * 1000.;
   
     printf("iter %d  tri %d  go %d\n", poly.get_count(), poly.get_triangulation_count(), keepgoing);
     osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved(true).data(), buffer, width, xcol, ycol);
     //print_points("", bufsize, poly.points_.get_points_interleaved(true).data());
+    osc_send_tri(poly.triangulation_.get_vertices());
     printf("iter %d  tri %d  go %d took %f ms\n", poly.get_count(), poly.get_triangulation_count(), keepgoing, dur);
 
     usleep(std::max(0., (100 - dur) * 1000.));
