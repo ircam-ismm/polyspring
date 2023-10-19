@@ -7,6 +7,9 @@
 #include "unistd.h"	// sleep
 #include "time.h"	// clock
 #include "lo/lo.h"	// osc
+#include <fstream>
+#include <iterator>
+#include <vector>
 #include "polyspring.hpp"
 
 lo_address addr;
@@ -40,7 +43,7 @@ void osc_close ()
   lo_address_free(addr);
 }
 
-void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig = NULL)
+void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig, int width, int xcol, int ycol)
 {
   int stat = 0;
   stat += lo_send(addr, "/buffer_index", "i", bufind);
@@ -54,8 +57,8 @@ void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig = NULL
     float origy = y;
     if (orig)
     {
-      origx = orig[i * 2];
-      origy = orig[i * 2 + 1];
+      origx = orig[i * width + xcol];
+      origy = orig[i * width + ycol];
     }
     stat += lo_send(addr, "/append", "iffff", i, origx, origy, x, y);
   }
@@ -70,9 +73,9 @@ void osc_send_buffer (int bufind, int numrows, float *buffer, float *orig = NULL
 }
 
 
-int data_gen_linear (int bufsize, float **bufs)
+int data_gen_linear (int bufsize, float **bufs, int &width, int &xcol, int &ycol)
 {
-  float *buffer = (float *) malloc(bufsize * 2 * sizeof(float));
+  float *buffer = (float *) malloc(bufsize * 2 * sizeof(float)); // memleak, but we don't care
 
   for (int i = 0; i < bufsize; i++)
   { // fill lower third
@@ -81,11 +84,29 @@ int data_gen_linear (int bufsize, float **bufs)
   }
 
   bufs[0] = buffer;
+  width = 2;
+  xcol = 0;
+  ycol = 1;
   return bufsize;
 }
 
-void data_load (int bufsize, float *buffer)
+int data_load (const char *filename, float **bufs, int &width, int &xcol, int &ycol)
 {
+  std::ifstream file(filename);
+  if (file.fail())
+  {
+    printf("ERROR: can't open %s.\n", filename);
+    return -1;
+  }
+  
+  static std::vector<float> vec(std::istream_iterator<float>(file), {});
+
+  // columns in txt files : timetags | original x | original y | final x | final y
+  bufs[0] = vec.data();
+  width = 5;
+  xcol = 1;
+  ycol = 2;
+  return vec.size() / 5;
 }
 
 int main (int argc, char *argv[])
@@ -93,20 +114,25 @@ int main (int argc, char *argv[])
   if (!osc_open(NULL /*"127.0.0.1"*/, "8012"))
     return 1;
 
-// create test data
-  int   width   = 2;
+  // create test data
   float *buf[1] = { NULL };
-  int   bufsize = data_gen_linear(1000 , buf);
-  float *buffer = buf[0];
-  
-  print_points("init", bufsize, buffer);
+  int width;	// layout of loaded buffer
+  int xcol;
+  int ycol;
+
+  //int   bufsize = data_gen_linear(1000 , buf, xcol, ycol);
+  int   bufsize = data_load("/Users/schwarz/src/polyspring/test-data/truth-1.txt", buf, width, xcol, ycol);
+  if (bufsize <= 0)  exit(1);
+
+  float *buffer = buf[0];  
+  print_points("init", bufsize, buffer, width, xcol, ycol);
 
   Polyspring<float> poly;
 
   // set corpus, copies blocks (buffers) into points array
-  poly.set_points(bufsize, 1, &bufsize, buf, width, 0, 1);
-  osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved().data());
-  print_points("set", bufsize, poly.points_.get_points_interleaved().data());
+  poly.set_points(bufsize, 1, &bufsize, buf, width, xcol, ycol);
+  osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved(true).data(), buffer, width, xcol, ycol);
+  print_points("set", bufsize, poly.points_.get_points_interleaved(true).data());
 
   bool keepgoing;
   do
@@ -117,13 +143,12 @@ int main (int argc, char *argv[])
     float dur = (stop_iter - start_iter) / (float) CLOCKS_PER_SEC * 1000.;
   
     printf("iter %d  tri %d  go %d\n", poly.get_count(), poly.get_triangulation_count(), keepgoing);
-    osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved().data(), buffer);
-    print_points("", bufsize, poly.points_.get_points_interleaved().data());
+    osc_send_buffer(1, bufsize, poly.points_.get_points_interleaved(true).data(), buffer, width, xcol, ycol);
+    //print_points("", bufsize, poly.points_.get_points_interleaved(true).data());
     printf("iter %d  tri %d  go %d took %f ms\n", poly.get_count(), poly.get_triangulation_count(), keepgoing, dur);
 
     usleep(std::max(0., (100 - dur) * 1000.));
   } while (keepgoing);
 
   osc_close();
-  free(buf[0]);
 }
