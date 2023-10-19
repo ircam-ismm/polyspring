@@ -47,6 +47,7 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 */
 
 
+#include <cfloat>
 #include <cmath>
 #include <vector>
 #include <numeric>      // for iota
@@ -56,15 +57,15 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 
-void print_points (const char * msg, int num, float *buf)
+void print_points (const char * msg, int num, float *buf, int width = 2, int xcol = 0, int ycol = 1)
 {
   if (msg && msg[0])
-    printf("%s\n", msg);
+    printf("%s (num %d)\n", msg, num);
   
   for (int i = 0; i < num; i++)
-    printf("%6.3f %6.3f\n", buf[i * 2], buf[i * 2 + 1]);
+    printf("%6.3f %6.3f\n", buf[i * width + xcol], buf[i * width + ycol]);
 
-  printf("\n");
+  //printf("\n");
 }
 
 template<typename T>
@@ -98,11 +99,18 @@ void blockwise (int numbuffers, int bufsizes[], CoordT *buffers[], F&& func)
 
 // vector function wrappers
 template<typename CoordT>
-void copy_with_strides (int num, CoordT *src, int srcstride, CoordT *dest, int deststride)
+void copy_with_strides (int num, CoordT *src, int srcstride, CoordT *dest, int deststride, CoordT &min, CoordT &max)
 {
   for (int i = 0; i < num; i++)
   {
-    *dest = *src;
+    CoordT val = *src;
+    
+    if (val < min)
+      min = val;
+    if (val > max)
+      max = val;
+    
+    *dest = val;
     dest += deststride;
     src  += srcstride;
   }
@@ -177,7 +185,7 @@ struct Edges
   //float mid_x, mid_y;// only needed for h_dist calculation
   std::vector<CoordT> h_dist_;  // vector of target density evaluated at mid_x/y
   std::vector<int>    a_, b_;	// indices into Points arrays to end points
-  const double	edge_correction_ = 2;	// factor taking into account that we store unique edges, while python code visits every ege twice via the near list of point a containing b and reciprocally b containing a
+  const double	edge_correction_ = 1;	// factor taking into account that we store unique edges, while python code visits every ege twice via the near list of point a containing b and reciprocally b containing a
   CoordT (*get_h_)(CoordT x, CoordT y);
 
   Edges (CoordT (*hfunc)(CoordT x, CoordT y))
@@ -328,7 +336,26 @@ struct Points
   std::vector<CoordT> points_;	// normalised interleaved point coords 0..1, created by pre-uniformisation
   std::vector<CoordT> push_;	// interleaved displacement vector x/y
 
-  std::vector<CoordT> &get_points_interleaved() { return points_; }
+  // original bounds before normalisation
+  std::vector<CoordT> bounds_min_{0, 0};
+  std::vector<CoordT> bounds_range_{1, 1};
+  std::vector<CoordT> scaled_points_;	// interleaved points scaled back from normalised coords 0..1 to original bounds
+
+  std::vector<CoordT> &get_points_interleaved (bool scaled = false)
+  {
+    if (scaled)
+    {
+      scaled_points_.resize(numpoints_ * 2);
+      for (int i = 0; i < numpoints_; i++)
+      {
+	scaled_points_[x(i)] = points_[x(i)] * bounds_range_[0] + bounds_min_[0];
+	scaled_points_[y(i)] = points_[y(i)] * bounds_range_[1] + bounds_min_[1];
+      }
+      return scaled_points_;
+    }
+    else
+      return points_;
+  }
 
   void init (int num)
   {
@@ -339,15 +366,25 @@ struct Points
 
   void set (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
   {
+    CoordT xmin =  FLT_MAX, ymin =  FLT_MAX;
+    CoordT xmax = -FLT_MAX, ymax = -FLT_MAX;
+    
     numpoints_ = numtotal;
     points_.resize(2 * numtotal);
     push_.resize(2 * numtotal);
+
+    // copy from blocks into interleaved vector and get min/max x/y
     blockwise(numbuffers, bufsizes, buffers,
 	      [&](int bufsize, CoordT *buffer, int offset) -> void
 	      {
-		copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data(),     2);
-		copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + 1, 2);
+		copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data(),     2, xmin, xmax);
+		copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + 1, 2, ymin, ymax);
 	      });
+
+    bounds_min_[0] = xmin;
+    bounds_min_[1] = ymin;
+    bounds_range_[0] = xmax - xmin;
+    bounds_range_[1] = ymax - ymin;
   }
   
   void pre_uniformize ()
@@ -459,7 +496,8 @@ template<typename CoordT>
 void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
 {
   points_.set(numtotal, numbuffers, bufsizes, buffers, bufwidth, colx, coly);
-  // get min/max x/y
+  vector_print("bounds min", points_.bounds_min_);
+  vector_print("     range", points_.bounds_range_);
 
   // set default region 0..1 square, signed distance function, inner box
   double area = 1;
@@ -497,7 +535,8 @@ bool Polyspring<CoordT>::iterate ()
 		  
   // compute rest length scaling factor
   double hscale = l0_uni_ * edges_.scaling_factor();
-
+  printf("scaling_factor %f\n", hscale);
+  
   // sum repulsive actions for each point
   /* for point in self.points: 
   	for near in point.near: // each edge is visited twice!!!!!
