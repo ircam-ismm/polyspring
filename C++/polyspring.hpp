@@ -310,10 +310,10 @@ struct Edges
             self.y + self.push_y) # update the shapely point now for outside observation
 */
     double angle = atan2((double) dist_[y(i)], (double) dist_[x(i)]);
-    push[x(a_[i])] += f * cos(angle);
-    push[y(a_[i])] += f * sin(angle);
-    push[x(b_[i])] -= f * cos(angle);
-    push[y(b_[i])] -= f * sin(angle);
+    push[x(a_[i])] -= f * cos(angle);
+    push[y(a_[i])] -= f * sin(angle);
+    push[x(b_[i])] += f * cos(angle);
+    push[y(b_[i])] += f * sin(angle);
 
     printf("apply_force %.3f angle %5.2f edge %d [%d, %d]\n", f, angle, i, a_[i], b_[i]);
   }
@@ -588,7 +588,7 @@ bool Polyspring<CoordT>::iterate ()
   for (int i = 0; i < edges_.numedges_; i++) // loop over over precalculated edge length and density h at edges midpoints
   {
     double f = k_ * (int_pres_ * hscale / edges_.h_dist_[i] - edges_.length_[i]); // TODO: vectorise this loop, second loop with apply_force
-    printf("force %6.3f edge %d [%d, %d]\n", f, i, edges_.a_[i], edges_.b_[i]);
+    //printf("force %6.3f edge %d [%d, %d]\n", f, i, edges_.a_[i], edges_.b_[i]);
     if (f > 0)
       edges_.apply_force(i, dt_ * f, points_.push_); // update edge's end points' push vectors with force from spring
   }
