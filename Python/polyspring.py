@@ -81,12 +81,13 @@ class Corpus():
                 npair += 1
                 midx ,midy = point.midTo(near)
                 target_area += 1 / self.h_dist(midx, midy)**2
-                #print("point {} near {} h {}".format(point, near, self.h_dist(midx, midy))) #####db
+                print("point {} near {} h {}".format(point, near, self.h_dist(midx, midy))) #####db
         return self.l0_uni * np.sqrt(npair / target_area)
 
     def preUniformization(self, init=True):
         c, s = self.region_inbox
         x1, y1, x2, y2 = c[0]-s, c[1]-s, c[0]+s, c[1]+s
+        print("preUniformization inbox", c, s, x1, y1, x2, y2) ###db
         all_points = list(self.points[:]) # copy to preserve initial sorting of self.points
         npoints = len(all_points)
         all_points.sort(key=Point.getX)
@@ -104,13 +105,13 @@ class Corpus():
 
         ###db: copy triangulation result for sending and printing
         self.simplices = triangulation.simplices
-        #print('tri', len(triangulation.simplices)) ###db
+        print('tri', len(triangulation.simplices)) ###db
         for (i, tri) in enumerate(triangulation.simplices):
             p1 = self.points[tri[0]]
             p2 = self.points[tri[1]]
             p3 = self.points[tri[2]]
-            #print('%3d' % i, p1, p2, p3)
-
+            print('%3d' % i, p1, p2, p3)
+            
         return triangulation
     
     def updateNearPoints(self, triangulation):
@@ -171,6 +172,7 @@ class Corpus():
                 for near in point.near:
                     midX ,midY = point.midTo(near)
                     f = k * (int_pres * hscale / self.h_dist(midX, midY) - point.distTo(near))
+                    print('force %6.3f %s to %s mid (%.3f, %.3f)' % (f, point, near, midX, midY)) ####db
                     if f > 0:
                         near.repulsiveForce(dt * f, point) # update push vector with force from near point
             # second loop after all forces computation
@@ -277,8 +279,11 @@ class Point():
         self.shap = ShPoint(
             self.x + self.push_x,
             self.y + self.push_y) # update the shapely point now for outside observation
+        print('repulsiveForce %.3f angle %5.2f %s' % (f, angle, point)) ###db
 
     def update(self, bounds):
+        print('up %s push (%.3f, %.3f)' % (self, self.push_x, self.push_y)) ###db
+
         self.x += self.push_x
         self.y += self.push_y
         self.scaled_x = self.x * (bounds[1] - bounds[0]) + bounds[0]
@@ -302,6 +307,7 @@ class Point():
         nexty = coords[1]
         self.push_x = nextx - self.x
         self.push_y = nexty - self.y
+        print('move', self, 'to', nextx, nexty, 'push', self.push_x, self.push_y) ###db
 
     def moveDist(self):
         return np.sqrt(self.push_x ** 2 + self.push_y ** 2)
