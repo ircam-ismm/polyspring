@@ -151,14 +151,35 @@ template<typename CoordT>
 class Region
 {
 public:
+  virtual double get_area () = 0;
+
+  // inner box, with inset margin
+  virtual void get_inbox (CoordT ll[2], CoordT ur[2]) = 0;
+  
   virtual bool point_is_within (CoordT x, CoordT y) = 0;
   virtual void move_point_back (CoordT &x, CoordT &y) = 0;
+
 };
 
 template<typename CoordT>
 class SquareRegion : public Region<CoordT>
 {
 public:
+  virtual double get_area () override { return 1; }
+
+  virtual void get_inbox (CoordT ll[2], CoordT ur[2]) override
+  {
+    // compute an inner box for dist init
+    double center[2] = { 0.5, 0.5 };
+    double area      = 1;
+    double inside    = sqrt(area) / 3;
+
+    ll[0] = center[0] - inside;
+    ll[1] = center[1] - inside;
+    ur[0] = center[0] + inside;
+    ur[1] = center[1] + inside;
+  }
+  
   virtual bool point_is_within (CoordT x, CoordT y) override
   {
     return x >= 0  &&  x <= 1  &&  y >= 0  &&  y <= 1;
@@ -229,7 +250,7 @@ struct Edges
     }
 
     //TODO: check if edge a, b or b, a already exists, remove, resize other vectors
-  }
+  } // end Edges::set ()
 
   // update edges after points have moved
   void update (std::vector<CoordT> &points)
@@ -293,6 +314,8 @@ struct Edges
     push[y(a_[i])] += f * sin(angle);
     push[x(b_[i])] -= f * cos(angle);
     push[y(b_[i])] -= f * sin(angle);
+
+    printf("apply_force %.3f angle %5.2f edge %d [%d, %d]\n", f, angle, i, a_[i], b_[i]);
   }
 }; // end struct Edges
 
@@ -391,10 +414,18 @@ struct Points
     bounds_min_[1] = ymin;
     bounds_range_[0] = xmax - xmin;
     bounds_range_[1] = ymax - ymin;
-  }
+  } // end Points::set ()
   
-  void pre_uniformize ()
+  void pre_uniformize (Region<CoordT> &region)
   { // replace points (in descriptor coordinates) by normalised sort index
+
+    // get inbox for generating pre-uniformised coords
+    CoordT p1[2], p2[2], len[2];
+    region.get_inbox(p1, p2);
+    len[0] = p2[0] - p1[0];
+    len[1] = p2[1] - p1[1];
+    printf("pre_uniformize inbox (%f, %f) (%f, %f)\n", p1[0], p1[1], p2[0], p2[1]);
+
     // create rank array of size numframes
     std::vector<size_t> indices(numpoints_);
 
@@ -414,17 +445,20 @@ struct Points
         }
       );
       
-      // scale to 0..1 and copy order of elem back to points
+      // scale sorted indices to 0 + inset .. 1 - inset and copy order of elem back to points
       for (size_t i = 0; i < numpoints_; i++)
       {
         size_t order = indices[i];
-	points_[order * 2 + colind] = (float) i / (numpoints_ - 1);
+	points_[order * 2 + colind] = ((CoordT) i / (numpoints_ - 1)) * len[colind] + p1[colind];
       }
     } // end for colind
   } // end Points::pre_uniformize ()
   
   void update ()
   {
+    for (int i = 0; i < numpoints_; i++)
+      printf("up %3d (%.3f, %.3f) push (%.3f, %.3f)\n", i, points_[x(i)], points_[y(i)], push_[x(i)], push_[y(i)]);
+    
     vector_add(points_, push_);    // points_ += push_;
   }
 
@@ -475,7 +509,7 @@ public:
   //h_dist: function to get target distance for point
   Region<CoordT>	*region_ = NULL;
 
-  Points<CoordT>	points_;	// points
+  Points<CoordT>	points_;	// points container
   Triangulation<CoordT> triangulation_;	// wrapper around delaunay triangulation
   Edges<CoordT>		edges_;		// keeps list of edges
   double		l0_uni_;	// spring rest length
@@ -485,7 +519,7 @@ public:
 public:
   Polyspring ()
   : edges_(get_h),	// default: uniform
-    region_(new SquareRegion<CoordT>) // default region
+    region_(new SquareRegion<CoordT>) // set default region 0..1 square, signed distance function, inner box
   {}
 
   void set_region (std::string name);
@@ -505,15 +539,13 @@ void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[
   vector_print("bounds min", points_.bounds_min_);
   vector_print("     range", points_.bounds_range_);
 
-  // set default region 0..1 square, signed distance function, inner box
-  double area = 1;
-
   // pre-uniformization, replaces points by normalised sort index
-  // and scale points to fit into region
-  points_.pre_uniformize();
+  // and scale points to fit into region's inner box
+  points_.pre_uniformize(*region_);
     
   // compute the spring rest length
   // self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
+  double area = region_->get_area();
   l0_uni_ = sqrt(2 / (sqrt(3) * numtotal / area));
   
   count_ = 0;
@@ -556,6 +588,7 @@ bool Polyspring<CoordT>::iterate ()
   for (int i = 0; i < edges_.numedges_; i++) // loop over over precalculated edge length and density h at edges midpoints
   {
     double f = k_ * (int_pres_ * hscale / edges_.h_dist_[i] - edges_.length_[i]); // TODO: vectorise this loop, second loop with apply_force
+    printf("force %6.3f edge %d [%d, %d]\n", f, i, edges_.a_[i], edges_.b_[i]);
     if (f > 0)
       edges_.apply_force(i, dt_ * f, points_.push_); // update edge's end points' push vectors with force from spring
   }
