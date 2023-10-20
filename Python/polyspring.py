@@ -97,6 +97,10 @@ class Corpus():
         for i in range(npoints):
             all_points[i].y = (i / (npoints - 1)) * (y2 - y1) + y1
 
+        # copy pre-uniformised point positions to the shapely points
+        for i in range(npoints):
+            all_points[i].shap = ShPoint(all_points[i].x, all_points[i].y)
+
     def delaunayTriangulation(self):
         all_coord = [[pt.x, pt.y] for pt in self.points]
         all_coord = np.asarray(all_coord)
