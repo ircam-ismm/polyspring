@@ -96,11 +96,12 @@ void osc_send_tri (std::vector<size_t> &vertices)
 int data_gen_linear (int bufsize, float **bufs, int &width, int &xcol, int &ycol)
 {
   float *buffer = (float *) malloc(bufsize * 2 * sizeof(float)); // memleak, but we don't care
+  int wrap = bufsize <= 3 ? 2 : 3;
 
   for (int i = 0; i < bufsize; i++)
   { // fill lower third
     buffer[i * 2    ] = (float) i / bufsize;
-    buffer[i * 2 + 1] = (float) (i % 3) / bufsize;
+    buffer[i * 2 + 1] = (float) (i % wrap) / bufsize;
   }
 
   bufs[0] = buffer;
@@ -140,8 +141,8 @@ int main (int argc, char *argv[])
   int xcol;
   int ycol;
 
-  //int   bufsize = data_gen_linear(1000 , buf, xcol, ycol);
-  int   bufsize = data_load("/Users/schwarz/src/polyspring/test-data/truth-1.txt", buf, width, xcol, ycol);
+  int   bufsize = data_gen_linear(3 , buf, width, xcol, ycol);
+  //int   bufsize = data_load("/Users/schwarz/src/polyspring/test-data/truth-1.txt", buf, width, xcol, ycol);
   if (bufsize <= 0)  exit(1);
 
   float *buffer = buf[0];  
@@ -155,7 +156,7 @@ int main (int argc, char *argv[])
   print_points("set", bufsize, poly.points_.get_points_interleaved(true).data());
 
   bool keepgoing;
-  const int numiter = 100;
+  const int numiter = 10;
   do
   {
     clock_t start_iter = clock();
