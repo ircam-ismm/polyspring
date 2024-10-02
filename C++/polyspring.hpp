@@ -54,6 +54,10 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 #include <algorithm>    // for sort
 #include "delaunator.hpp"
 
+
+#define DEBUG_POLY (DEBUG * 1)
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITIES
 
@@ -74,7 +78,7 @@ void vector_print (const char * msg, std::vector<T> v)
   print_points(msg, v.size() / 2, v.data());
 }
 
-// apply lambda on each block buffer of size bufsize, keep corresponding offset into contiguous vector
+// apply lambda (size, ptr, offset) on each block buffer of size bufsize, keep corresponding offset into contiguous vector
 // https://stackoverflow.com/questions/66224510/simplest-way-to-pass-a-lambda-as-a-method-parameter-in-c17:
 // - use type-erasing wrapper:
 // void blockwise (int numbuffers, int bufsize[], CoordT *buffers[], std::function< void (int bufsize, CoordT *buffer, int offset)> func)
@@ -315,7 +319,9 @@ struct Edges
     push[x(b_[i])] += f * cos(angle);
     push[y(b_[i])] += f * sin(angle);
 
+#if DEBUG_POLY > 3
     printf("apply_force %.3f angle %5.2f edge %d [%d, %d]\n", f, angle, i, a_[i], b_[i]);
+#endif
   }
 }; // end struct Edges
 
@@ -346,11 +352,12 @@ struct Triangulation
 
     count_++;
 
-    // dbprint
+#if DEBUG_POLY > 2
     for (int i = 0; i < vertices_->size(); i += 3)
     {
       printf("tri %3d: %3d %3d %3d\n", i / 3, (*vertices_)[i], (*vertices_)[i + 1], (*vertices_)[i + 2]);
     }
+#endif
   }
 
   std::vector<size_t> &get_vertices() { return *vertices_; }
@@ -370,6 +377,12 @@ struct Points
   std::vector<CoordT> bounds_range_{1, 1};
   std::vector<CoordT> scaled_points_;	// interleaved points scaled back from normalised coords 0..1 to original bounds
 
+  void get_bounds (std::vector<CoordT> &bounds_min, std::vector<CoordT> &bounds_range)
+  {
+    bounds_min   = bounds_min_;
+    bounds_range = bounds_range_;
+  }
+
   std::vector<CoordT> &get_points_interleaved (bool scaled = false)
   {
     if (scaled)
@@ -384,7 +397,7 @@ struct Points
     }
     else
       return points_;
-  }
+  } // end Points::get_points_interleaved ()
 
   void init (int num)
   {
@@ -424,8 +437,11 @@ struct Points
     region.get_inbox(p1, p2);
     len[0] = p2[0] - p1[0];
     len[1] = p2[1] - p1[1];
-    printf("pre_uniformize inbox (%f, %f) (%f, %f)\n", p1[0], p1[1], p2[0], p2[1]);
 
+#if DEBUG_POLY
+    printf("pre_uniformize inbox (%f, %f) (%f, %f)\n", p1[0], p1[1], p2[0], p2[1]);
+#endif
+    
     // create rank array of size numframes
     std::vector<size_t> indices(numpoints_);
 
@@ -456,8 +472,10 @@ struct Points
   
   void update ()
   {
+#if DEBUG_POLY > 2
     for (int i = 0; i < numpoints_; i++)
       printf("up %3d (%.3f, %.3f) push (%.3f, %.3f)\n", i, points_[x(i)], points_[y(i)], push_[x(i)], push_[y(i)]);
+#endif
     
     vector_add(points_, push_);    // points_ += push_;
   }
@@ -494,6 +512,7 @@ struct Points
 }; // end struct Points
 
 
+
 ///////////////////////////////////////////////////////////////////////////////
 template<typename CoordT>
 class Polyspring
@@ -528,7 +547,7 @@ public:
   bool iterate ();
   int get_count() { return count_; };
   int get_triangulation_count() { return triangulation_.count_; };
-};
+}; // end class Polyspring
 
 
 // copy points from buffers into vector, do rescaling
@@ -550,7 +569,7 @@ void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[
   
   count_ = 0;
   update_tri_ = true;
-}
+} // end Polyspring::set_points ()
 
 
 // main loop
@@ -573,7 +592,7 @@ bool Polyspring<CoordT>::iterate ()
 		  
   // compute rest length scaling factor
   double hscale = l0_uni_ * edges_.scaling_factor();
-  printf("scaling_factor %f\n", hscale);
+  //printf("scaling_factor %f\n", hscale);
   
   // sum repulsive actions for each point
   /* for point in self.points: 
@@ -613,7 +632,9 @@ bool Polyspring<CoordT>::iterate ()
     {
       if (!keep_going  &&  points_.dist_moved(i) / l0_uni_ > stop_tol_)
       {
+#if DEBUG_POLY	
 	printf("point %d moved %f,  norm %f > stop_tol %f\n", i, points_.dist_moved(i),  points_.dist_moved(i) / l0_uni_, stop_tol_);
+#endif
 	keep_going = true; // any point moved more than stop tolerance: do one more iteration
       }
     }
