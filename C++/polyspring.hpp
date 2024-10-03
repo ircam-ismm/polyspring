@@ -333,12 +333,12 @@ struct Triangulation
   std::vector<double> tripoints_;	// interleaved(!) array of x/y coordinates for delaunay triangulation (must be double for delaunator), need to keep for use in dist_since_triangulation
   std::vector<size_t> *vertices_;	// interleaved(!) array of triplets of triangle vertex indices (into tripoints array)
   delaunator::Delaunator *del_ = NULL;
-  int count_ = 0;
+  int tri_count_ = 0;
 
   void init (int num)
   {
     tripoints_.reserve(num * 2); // don't init elements, will be overwritten by triangulate()
-    count_ = 0;
+    tri_count_ = 0;
   }
 
   void triangulate (std::vector<CoordT> &points)
@@ -350,7 +350,7 @@ struct Triangulation
     del_ = new delaunator::Delaunator(tripoints_);
     vertices_ = &del_->triangles;
 
-    count_++;
+    tri_count_++;
 
 #if DEBUG_POLY > 2
     for (int i = 0; i < vertices_->size(); i += 3)
@@ -472,7 +472,7 @@ struct Points
   
   void update ()
   {
-#if DEBUG_POLY > 2
+#if DEBUG_POLY > 1
     for (int i = 0; i < numpoints_; i++)
       printf("up %3d (%.3f, %.3f) push (%.3f, %.3f)\n", i, points_[x(i)], points_[y(i)], push_[x(i)], push_[y(i)]);
 #endif
@@ -546,7 +546,7 @@ public:
   static CoordT get_h (CoordT x, CoordT y) { return 1; } // TODO: evaluate target density function at point
   bool iterate ();
   int get_count() { return count_; };
-  int get_triangulation_count() { return triangulation_.count_; };
+  int get_triangulation_count() { return triangulation_.tri_count_; };
 }; // end class Polyspring
 
 
@@ -612,7 +612,12 @@ bool Polyspring<CoordT>::iterate ()
       edges_.apply_force(i, dt_ * f, points_.push_); // update edge's end points' push vectors with force from spring
   }
 
-  //vector_print("push", points_.push_);
+#if DEBUG_POLY > 2
+  vector_print("push", points_.push_);
+#endif
+
+  // MAYBE LATER: handle points which would be moved out of bounding shape:
+  // clip movement of a point A to border, but redistribute overshooting movement (perpendicular to border) as force pushing connected points Bi back from boundary (redistribute according to each point's contributions to overshoot)
   
   // move point positions, but leave push
   points_.update();
@@ -633,7 +638,7 @@ bool Polyspring<CoordT>::iterate ()
       if (!keep_going  &&  points_.dist_moved(i) / l0_uni_ > stop_tol_)
       {
 #if DEBUG_POLY	
-	printf("point %d moved %f,  norm %f > stop_tol %f\n", i, points_.dist_moved(i),  points_.dist_moved(i) / l0_uni_, stop_tol_);
+	printf("iter %3d: point %d moved %f,  norm %f > stop_tol %f\n", count_, i, points_.dist_moved(i),  points_.dist_moved(i) / l0_uni_, stop_tol_);
 #endif
 	keep_going = true; // any point moved more than stop tolerance: do one more iteration
       }
