@@ -1,0 +1,467 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		21E161E52AA8854F006ED5FE /* test-polyspring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E161E42AA8854F006ED5FE /* test-polyspring.cpp */; };
+		21E1620C2AA88791006ED5FE /* delaunator.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E161FE2AA88761006ED5FE /* delaunator.hpp */; };
+		21E1620E2AA8ADCD006ED5FE /* polyspring.hpp in Sources */ = {isa = PBXBuildFile; fileRef = 21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */; };
+		21E1621D2AAA07F6006ED5FE /* lo.h in Sources */ = {isa = PBXBuildFile; fileRef = 21E162172AAA07E0006ED5FE /* lo.h */; };
+		21E1621F2AAA0F7F006ED5FE /* liblo.la in Frameworks */ = {isa = PBXBuildFile; fileRef = 21E1621E2AAA0F7F006ED5FE /* liblo.la */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		21E161D82AA88531006ED5FE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		21E161DA2AA88531006ED5FE /* test polyspring */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "test polyspring"; sourceTree = BUILT_PRODUCTS_DIR; };
+		21E161E42AA8854F006ED5FE /* test-polyspring.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "test-polyspring.cpp"; path = "../test-polyspring.cpp"; sourceTree = "<group>"; };
+		21E161E82AA88761006ED5FE /* benchmark_out.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = benchmark_out.csv; sourceTree = "<group>"; };
+		21E161E92AA88761006ED5FE /* run.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = run.cpp; sourceTree = "<group>"; };
+		21E161EA2AA88761006ED5FE /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		21E161EB2AA88761006ED5FE /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		21E161ED2AA88761006ED5FE /* main.test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.test.cpp; sourceTree = "<group>"; };
+		21E161EF2AA88761006ED5FE /* playgrounds-1356-triangles.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "playgrounds-1356-triangles.json"; sourceTree = "<group>"; };
+		21E161F02AA88761006ED5FE /* map-25p-epsg-3857.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = "map-25p-epsg-3857.geojson"; sourceTree = "<group>"; };
+		21E161F12AA88761006ED5FE /* osm-nodes-45331-triangles.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "osm-nodes-45331-triangles.json"; sourceTree = "<group>"; };
+		21E161F22AA88761006ED5FE /* osm-nodes-45331-epsg-3857.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = "osm-nodes-45331-epsg-3857.geojson"; sourceTree = "<group>"; };
+		21E161F32AA88761006ED5FE /* playgrounds-1356-epsg-3857.geojson */ = {isa = PBXFileReference; lastKnownFileType = text; path = "playgrounds-1356-epsg-3857.geojson"; sourceTree = "<group>"; };
+		21E161F42AA88761006ED5FE /* delaunator.test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = delaunator.test.cpp; sourceTree = "<group>"; };
+		21E161F62AA88761006ED5FE /* mason.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = mason.cmake; sourceTree = "<group>"; };
+		21E161F82AA88761006ED5FE /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
+		21E161F92AA88761006ED5FE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		21E161FA2AA88761006ED5FE /* package-lock.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "package-lock.json"; sourceTree = "<group>"; };
+		21E161FB2AA88761006ED5FE /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
+		21E161FC2AA88761006ED5FE /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		21E161FE2AA88761006ED5FE /* delaunator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = delaunator.hpp; sourceTree = "<group>"; };
+		21E161FF2AA88761006ED5FE /* THIRD-PARTY-NOTICES */ = {isa = PBXFileReference; lastKnownFileType = text; path = "THIRD-PARTY-NOTICES"; sourceTree = "<group>"; };
+		21E162002AA88761006ED5FE /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		21E162012AA88761006ED5FE /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		21E162022AA88761006ED5FE /* CONTRIBUTING.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
+		21E162042AA88761006ED5FE /* basic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = basic.cpp; sourceTree = "<group>"; };
+		21E162052AA88761006ED5FE /* utils.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = utils.hpp; sourceTree = "<group>"; };
+		21E162062AA88761006ED5FE /* triangulate_geojson.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate_geojson.cpp; sourceTree = "<group>"; };
+		21E162082AA88761006ED5FE /* setup.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = setup.sh; sourceTree = "<group>"; };
+		21E162092AA88761006ED5FE /* format.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = format.sh; sourceTree = "<group>"; };
+		21E1620A2AA88761006ED5FE /* .clang-format */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".clang-format"; sourceTree = "<group>"; };
+		21E1620B2AA88761006ED5FE /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
+		21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = polyspring.hpp; path = ../polyspring.hpp; sourceTree = "<group>"; };
+		21E162102AAA07C6006ED5FE /* liblo.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblo.7.dylib; path = ../../../../../../sw/lib/liblo.7.dylib; sourceTree = "<group>"; };
+		21E162132AAA07E0006ED5FE /* lo_cpp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_cpp.h; sourceTree = "<group>"; };
+		21E162142AAA07E0006ED5FE /* lo_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_types.h; sourceTree = "<group>"; };
+		21E162152AAA07E0006ED5FE /* lo_serverthread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_serverthread.h; sourceTree = "<group>"; };
+		21E162162AAA07E0006ED5FE /* lo_macros.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_macros.h; sourceTree = "<group>"; };
+		21E162172AAA07E0006ED5FE /* lo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo.h; sourceTree = "<group>"; };
+		21E162182AAA07E0006ED5FE /* lo_endian.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_endian.h; sourceTree = "<group>"; };
+		21E162192AAA07E0006ED5FE /* lo_throw.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_throw.h; sourceTree = "<group>"; };
+		21E1621A2AAA07E0006ED5FE /* lo_osc_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_osc_types.h; sourceTree = "<group>"; };
+		21E1621B2AAA07E0006ED5FE /* lo_lowlevel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_lowlevel.h; sourceTree = "<group>"; };
+		21E1621C2AAA07E0006ED5FE /* lo_errors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lo_errors.h; sourceTree = "<group>"; };
+		21E1621E2AAA0F7F006ED5FE /* liblo.la */ = {isa = PBXFileReference; lastKnownFileType = text; name = liblo.la; path = ../../../../../../sw/lib/liblo.la; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		21E161D72AA88531006ED5FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				21E1621F2AAA0F7F006ED5FE /* liblo.la in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		21E161D12AA88531006ED5FE = {
+			isa = PBXGroup;
+			children = (
+				21E162122AAA07E0006ED5FE /* lo */,
+				21E1620D2AA8ADC8006ED5FE /* polyspring.hpp */,
+				21E161E62AA88761006ED5FE /* delaunator-cpp */,
+				21E161DC2AA88531006ED5FE /* test polyspring */,
+				21E161DB2AA88531006ED5FE /* Products */,
+				21E1620F2AAA07C6006ED5FE /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		21E161DB2AA88531006ED5FE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				21E161DA2AA88531006ED5FE /* test polyspring */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		21E161DC2AA88531006ED5FE /* test polyspring */ = {
+			isa = PBXGroup;
+			children = (
+				21E161E42AA8854F006ED5FE /* test-polyspring.cpp */,
+			);
+			path = "test polyspring";
+			sourceTree = "<group>";
+		};
+		21E161E62AA88761006ED5FE /* delaunator-cpp */ = {
+			isa = PBXGroup;
+			children = (
+				21E161E72AA88761006ED5FE /* bench */,
+				21E161EA2AA88761006ED5FE /* CMakeLists.txt */,
+				21E161EB2AA88761006ED5FE /* LICENSE */,
+				21E161EC2AA88761006ED5FE /* test */,
+				21E161F52AA88761006ED5FE /* cmake */,
+				21E161F72AA88761006ED5FE /* generate-reference-triangles */,
+				21E161FC2AA88761006ED5FE /* Makefile */,
+				21E161FD2AA88761006ED5FE /* include */,
+				21E161FF2AA88761006ED5FE /* THIRD-PARTY-NOTICES */,
+				21E162002AA88761006ED5FE /* README.md */,
+				21E162012AA88761006ED5FE /* .gitignore */,
+				21E162022AA88761006ED5FE /* CONTRIBUTING.md */,
+				21E162032AA88761006ED5FE /* examples */,
+				21E162072AA88761006ED5FE /* scripts */,
+				21E1620A2AA88761006ED5FE /* .clang-format */,
+				21E1620B2AA88761006ED5FE /* .travis.yml */,
+			);
+			name = "delaunator-cpp";
+			path = "../delaunator-cpp";
+			sourceTree = "<group>";
+		};
+		21E161E72AA88761006ED5FE /* bench */ = {
+			isa = PBXGroup;
+			children = (
+				21E161E82AA88761006ED5FE /* benchmark_out.csv */,
+				21E161E92AA88761006ED5FE /* run.cpp */,
+			);
+			path = bench;
+			sourceTree = "<group>";
+		};
+		21E161EC2AA88761006ED5FE /* test */ = {
+			isa = PBXGroup;
+			children = (
+				21E161ED2AA88761006ED5FE /* main.test.cpp */,
+				21E161EE2AA88761006ED5FE /* test-files */,
+				21E161F42AA88761006ED5FE /* delaunator.test.cpp */,
+			);
+			path = test;
+			sourceTree = "<group>";
+		};
+		21E161EE2AA88761006ED5FE /* test-files */ = {
+			isa = PBXGroup;
+			children = (
+				21E161EF2AA88761006ED5FE /* playgrounds-1356-triangles.json */,
+				21E161F02AA88761006ED5FE /* map-25p-epsg-3857.geojson */,
+				21E161F12AA88761006ED5FE /* osm-nodes-45331-triangles.json */,
+				21E161F22AA88761006ED5FE /* osm-nodes-45331-epsg-3857.geojson */,
+				21E161F32AA88761006ED5FE /* playgrounds-1356-epsg-3857.geojson */,
+			);
+			path = "test-files";
+			sourceTree = "<group>";
+		};
+		21E161F52AA88761006ED5FE /* cmake */ = {
+			isa = PBXGroup;
+			children = (
+				21E161F62AA88761006ED5FE /* mason.cmake */,
+			);
+			path = cmake;
+			sourceTree = "<group>";
+		};
+		21E161F72AA88761006ED5FE /* generate-reference-triangles */ = {
+			isa = PBXGroup;
+			children = (
+				21E161F82AA88761006ED5FE /* index.js */,
+				21E161F92AA88761006ED5FE /* README.md */,
+				21E161FA2AA88761006ED5FE /* package-lock.json */,
+				21E161FB2AA88761006ED5FE /* package.json */,
+			);
+			path = "generate-reference-triangles";
+			sourceTree = "<group>";
+		};
+		21E161FD2AA88761006ED5FE /* include */ = {
+			isa = PBXGroup;
+			children = (
+				21E161FE2AA88761006ED5FE /* delaunator.hpp */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		21E162032AA88761006ED5FE /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				21E162042AA88761006ED5FE /* basic.cpp */,
+				21E162052AA88761006ED5FE /* utils.hpp */,
+				21E162062AA88761006ED5FE /* triangulate_geojson.cpp */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		21E162072AA88761006ED5FE /* scripts */ = {
+			isa = PBXGroup;
+			children = (
+				21E162082AA88761006ED5FE /* setup.sh */,
+				21E162092AA88761006ED5FE /* format.sh */,
+			);
+			path = scripts;
+			sourceTree = "<group>";
+		};
+		21E1620F2AAA07C6006ED5FE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				21E1621E2AAA0F7F006ED5FE /* liblo.la */,
+				21E162102AAA07C6006ED5FE /* liblo.7.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		21E162122AAA07E0006ED5FE /* lo */ = {
+			isa = PBXGroup;
+			children = (
+				21E162132AAA07E0006ED5FE /* lo_cpp.h */,
+				21E162142AAA07E0006ED5FE /* lo_types.h */,
+				21E162152AAA07E0006ED5FE /* lo_serverthread.h */,
+				21E162162AAA07E0006ED5FE /* lo_macros.h */,
+				21E162172AAA07E0006ED5FE /* lo.h */,
+				21E162182AAA07E0006ED5FE /* lo_endian.h */,
+				21E162192AAA07E0006ED5FE /* lo_throw.h */,
+				21E1621A2AAA07E0006ED5FE /* lo_osc_types.h */,
+				21E1621B2AAA07E0006ED5FE /* lo_lowlevel.h */,
+				21E1621C2AAA07E0006ED5FE /* lo_errors.h */,
+			);
+			name = lo;
+			path = ../../../../../../sw/include/lo;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		21E161D92AA88531006ED5FE /* test polyspring */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 21E161E12AA88531006ED5FE /* Build configuration list for PBXNativeTarget "test polyspring" */;
+			buildPhases = (
+				21E161D62AA88531006ED5FE /* Sources */,
+				21E161D72AA88531006ED5FE /* Frameworks */,
+				21E161D82AA88531006ED5FE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "test polyspring";
+			productName = "test polyspring";
+			productReference = 21E161DA2AA88531006ED5FE /* test polyspring */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		21E161D22AA88531006ED5FE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0940;
+				ORGANIZATIONNAME = ircam;
+				TargetAttributes = {
+					21E161D92AA88531006ED5FE = {
+						CreatedOnToolsVersion = 9.4.1;
+					};
+				};
+			};
+			buildConfigurationList = 21E161D52AA88531006ED5FE /* Build configuration list for PBXProject "test polyspring" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 21E161D12AA88531006ED5FE;
+			productRefGroup = 21E161DB2AA88531006ED5FE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				21E161D92AA88531006ED5FE /* test polyspring */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		21E161D62AA88531006ED5FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				21E1621D2AAA07F6006ED5FE /* lo.h in Sources */,
+				21E1620C2AA88791006ED5FE /* delaunator.hpp in Sources */,
+				21E1620E2AA8ADCD006ED5FE /* polyspring.hpp in Sources */,
+				21E161E52AA8854F006ED5FE /* test-polyspring.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		21E161DF2AA88531006ED5FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /sw/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		21E161E02AA88531006ED5FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /sw/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		21E161E22AA88531006ED5FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = /sw/lib;
+				OTHER_LDFLAGS = "-llo";
+				OTHER_LIBTOOLFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		21E161E32AA88531006ED5FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				LIBRARY_SEARCH_PATHS = /sw/lib;
+				OTHER_LDFLAGS = "-llo";
+				OTHER_LIBTOOLFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		21E161D52AA88531006ED5FE /* Build configuration list for PBXProject "test polyspring" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				21E161DF2AA88531006ED5FE /* Debug */,
+				21E161E02AA88531006ED5FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		21E161E12AA88531006ED5FE /* Build configuration list for PBXNativeTarget "test polyspring" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				21E161E22AA88531006ED5FE /* Debug */,
+				21E161E32AA88531006ED5FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 21E161D22AA88531006ED5FE /* Project object */;
+}

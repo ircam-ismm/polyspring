@@ -1,0 +1,1 @@
+columns in txt files : timetags | original x | original y | final x | final y

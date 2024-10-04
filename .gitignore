@@ -5,3 +5,7 @@ __pycache__/
 polyspring-osc.spec
 .DS_Store
 .DS_Store
+C++/test polyspring/test polyspring.xcodeproj/project.xcworkspace
+C++/test polyspring/test polyspring.xcodeproj/xcuserdata
+C++/test polyspring/a.out.dSYM
+a.out

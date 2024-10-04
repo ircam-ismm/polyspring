@@ -43,7 +43,7 @@ class Corpus():
         ymax = max(points, key=lambda pt : pt[1])[1]
         self.bounds = (xmin, xmax, ymin, ymax)
         # create points and initial spring length
-        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds) for pt in self.all_buffer)
+        self.points = tuple(Point(pt[cols[0]], pt[cols[1]], self.bounds, index) for index, pt in enumerate(self.all_buffer))
         # reset region
         if reset_region:
             vertices = ((0, 0), (0, 1), (1, 1), (1, 0))
@@ -81,11 +81,13 @@ class Corpus():
                 npair += 1
                 midx ,midy = point.midTo(near)
                 target_area += 1 / self.h_dist(midx, midy)**2
+                #print("point {} near {} h {}".format(point, near, self.h_dist(midx, midy))) #####db
         return self.l0_uni * np.sqrt(npair / target_area)
 
     def preUniformization(self, init=True):
         c, s = self.region_inbox
         x1, y1, x2, y2 = c[0]-s, c[1]-s, c[0]+s, c[1]+s
+        #print("preUniformization inbox", c, s, x1, y1, x2, y2) ###db
         all_points = list(self.points[:]) # copy to preserve initial sorting of self.points
         npoints = len(all_points)
         all_points.sort(key=Point.getX)
@@ -104,6 +106,16 @@ class Corpus():
         all_coord = np.asarray(all_coord)
         triangulation = Delaunay(all_coord)
         self.updateNearPoints(triangulation)
+
+        if False: ###db: copy triangulation result for sending and printing
+            self.simplices = triangulation.simplices
+            print('tri', len(triangulation.simplices)) ###db
+            for (i, tri) in enumerate(triangulation.simplices):
+                p1 = self.points[tri[0]]
+                p2 = self.points[tri[1]]
+                p3 = self.points[tri[2]]
+                print('%3d' % i, p1, p2, p3)
+            
         return triangulation
     
     def updateNearPoints(self, triangulation):
@@ -160,20 +172,25 @@ class Corpus():
                 update_tri = False
             # compute rest length scaling factor
             hscale = self.getScalingFactor()
+
+            #print("getScalingFactor", hscale);
+            #return
+            
             # sum repulsive actions for each point
             for point in self.points: 
                 for near in point.near:
                     midX ,midY = point.midTo(near)
                     f = k * (int_pres * hscale / self.h_dist(midX, midY) - point.distTo(near))
+                    #print('force %6.3f %s to %s mid (%.3f, %.3f)' % (f, point, near, midX, midY)) ####db
                     if f > 0:
-                        near.repulsiveForce(dt * f, point)
+                        near.repulsiveForce(dt * f, point) # update push vector with force from near point
             # second loop after all forces computation
             for point in self.points: 
                 # check stop condition if inside region, else move it back inside
-                if point.shap.within(self.region):
+                if point.shap.within(self.region): # shap point is already pushed
                     if exit and point.moveDist() / self.l0_uni > stop_tol: 
                         exit = False
-                else:
+                else: # move points back into region (how exactly?) by setting push vector to ....
                     point.moveTo(nearest_points(self.region, point.shap)[0].coords[0])
                 # update point positions
                 point.update(self.bounds)
@@ -229,7 +246,8 @@ class Corpus():
 
 class Point():
 
-    def __init__(self, x, y, bounds):
+    def __init__(self, x, y, bounds, i):
+        self.index = i
         self.scaled_og_x = x
         self.scaled_og_y = y
         self.scaled_x = x
@@ -247,7 +265,7 @@ class Point():
         self.prev_y = normalized_y
         self.push_x = 0.0 # amount of pushing for next step
         self.push_y = 0.0
-        self.near = [] # list of nearest points for triangulation
+        self.near = [] # references to indices of points connected by triangles
     
     def midTo(self, point):
         midx = (self.x + point.x)/2
@@ -270,8 +288,11 @@ class Point():
         self.shap = ShPoint(
             self.x + self.push_x,
             self.y + self.push_y) # update the shapely point now for outside observation
+        #print('repulsiveForce %.3f angle %5.2f %s' % (f, angle, point)) ###db
 
     def update(self, bounds):
+        #print('up %s push (%.3f, %.3f)' % (self, self.push_x, self.push_y)) ###db
+
         self.x += self.push_x # apply movement
         self.y += self.push_y
         self.scaled_x = self.x * (bounds[1] - bounds[0]) + bounds[0]
@@ -284,7 +305,7 @@ class Point():
         self.prev_x = self.x
         self.prev_y = self.y
         
-    def distFromOrigin(self):
+    def distFromOrigin(self): # distance to position at last triangulation
         return np.sqrt((self.x-self.prev_x)**2 + (self.y-self.prev_y)**2)
     
     def resetNear(self):
@@ -295,6 +316,7 @@ class Point():
         nexty = coords[1]
         self.push_x = nextx - self.x
         self.push_y = nexty - self.y
+        #print('move', self, 'to', nextx, nexty, 'push', self.push_x, self.push_y) ###db
 
     def moveDist(self):
         return np.sqrt(self.push_x ** 2 + self.push_y ** 2)
@@ -316,10 +338,11 @@ class Point():
         self.shap = ShPoint(self.x, self.y)
 
     def __str__(self):
-        return str(self.x) + ' ' + str(self.y)
+        # return str(self.x) + ' ' + str(self.y)
+        return "%3d (%.3f, %.3f)" % (self.index, self.x, self.y)
 
     def __repr__(self):
-        return str(self.x) + ' ' + str(self.y)
+        return str(self.index) + ' ' + str(self.x) + ' ' + str(self.y)
 
 
 if __name__ == '__main__':

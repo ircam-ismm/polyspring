@@ -34,6 +34,12 @@ class CorpusMax(Corpus):
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:(i+1)*200])
                 else :
                     self.client.send_message('/set_matrix', [i*200] + uniY[i*200:])
+
+        #db: export triangulations
+        fl = [int(item) for sublist in self.simplices for item in sublist]
+        print('export tri', self.simplices)
+        self.client.send_message('/tri', fl)
+                    
         self.client.send_message('/step', 1)
 
 
@@ -174,6 +180,15 @@ if __name__ == "__main__":
     dispatcher.map("/attractors", attractors, client, global_hash)
     dispatcher.map("/stop", stop, client, global_hash)
     dispatcher.map("/get_bounds", get_bounds, client, global_hash)
+
+
+    ###db
+    # generate test data
+    data3 = [[0, 0], [1/3, 1/3], [2/3, 0]]
+    print("test data 3", data3)
+    testcrp = CorpusMax({'1': data3}, (0, 1), client)
+    testcrp.distribute(exportPeriod=1)
+    exit()
 
     # Init server
     server = osc_server.ThreadingOSCUDPServer((args_server.ip, args_server.port), dispatcher)
