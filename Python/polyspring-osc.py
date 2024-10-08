@@ -181,14 +181,13 @@ if __name__ == "__main__":
     dispatcher.map("/stop", stop, client, global_hash)
     dispatcher.map("/get_bounds", get_bounds, client, global_hash)
 
-
-    ###db
-    # generate test data
-    data3 = [[0, 0], [1/3, 1/3], [2/3, 0]]
-    print("test data 3", data3)
-    testcrp = CorpusMax({'1': data3}, (0, 1), client)
-    testcrp.distribute(exportPeriod=1)
-    exit()
+    if False:    ###db
+        # generate test data
+        data3 = [[0, 0], [1/3, 1/3], [2/3, 0]]
+        print("test data 3", data3)
+        testcrp = CorpusMax({'1': data3}, (0, 1), client)
+        testcrp.distribute(exportPeriod=1)
+        exit()
 
     # Init server
     server = osc_server.ThreadingOSCUDPServer((args_server.ip, args_server.port), dispatcher)

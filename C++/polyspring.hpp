@@ -55,7 +55,7 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 #include "delaunator.hpp"
 
 
-#define DEBUG_POLY (DEBUG * 1)
+#define DEBUG_POLY (DEBUG * 0)
 
 
 ///////////////////////////////////////////////////////////////////////////////

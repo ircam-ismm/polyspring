@@ -108,13 +108,14 @@ class Corpus():
         self.updateNearPoints(triangulation)
 
         ###db: copy triangulation result for sending and printing
-        self.simplices = triangulation.simplices
-        print('tri', len(triangulation.simplices)) ###db
-        for (i, tri) in enumerate(triangulation.simplices):
-            p1 = self.points[tri[0]]
-            p2 = self.points[tri[1]]
-            p3 = self.points[tri[2]]
-            print('%3d' % i, p1, p2, p3)
+        if False:
+            self.simplices = triangulation.simplices
+            print('tri', len(triangulation.simplices)) ###db
+            for (i, tri) in enumerate(triangulation.simplices):
+                p1 = self.points[tri[0]]
+                p2 = self.points[tri[1]]
+                p3 = self.points[tri[2]]
+                print('%3d' % i, p1, p2, p3)
             
         return triangulation
     
@@ -140,6 +141,7 @@ class Corpus():
         self.stop = True
 
     def distribute(self, exportPeriod=0, uni=False, init=True, stop_tol = 0.001):
+        print('bounds', self.bounds) ####db
         for point in self.points:
             point.recallOg(self.bounds)
         # pre-uniformization
@@ -176,7 +178,7 @@ class Corpus():
                 for near in point.near:
                     midX ,midY = point.midTo(near)
                     f = k * (int_pres * hscale / self.h_dist(midX, midY) - point.distTo(near))
-                    print('force %6.3f %s to %s mid (%.3f, %.3f)' % (f, point, near, midX, midY)) ####db
+                    #print('force %6.3f %s to %s mid (%.3f, %.3f)' % (f, point, near, midX, midY)) ####db
                     if f > 0:
                         near.repulsiveForce(dt * f, point) # update push vector with force from near point
             # second loop after all forces computation
@@ -286,7 +288,7 @@ class Point():
         print('repulsiveForce %.3f angle %5.2f %s' % (f, angle, point)) ###db
 
     def update(self, bounds):
-        print('up %s push (%.3f, %.3f)' % (self, self.push_x, self.push_y)) ###db
+        #print('up %s push (%.3f, %.3f)' % (self, self.push_x, self.push_y)) ###db
 
         self.x += self.push_x
         self.y += self.push_y
