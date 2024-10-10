@@ -55,7 +55,7 @@ https://github.com/Neverland1026/Delaunay_2D_CPP/commit/30d11bc967f26b2dc9e95670
 #include "delaunator.hpp"
 
 
-#define DEBUG_POLY (DEBUG * 1)
+#define DEBUG_POLY (DEBUG * 0)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -210,7 +210,7 @@ struct Edges
   //float mid_x, mid_y;// only needed for h_dist calculation
   std::vector<CoordT> h_dist_;  // vector of target density evaluated at mid_x/y
   std::vector<int>    a_, b_;	// indices into Points arrays to end points
-  const double	edge_correction_ = 1;	// factor taking into account that we store unique edges, while python code visits every ege twice via the near list of point a containing b and reciprocally b containing a
+  const double	edge_correction_ = 1;	// factor taking into account that we store unique edges, while python code visits every edge twice via the near list of point a containing b and reciprocally b containing a
   CoordT (*get_h_)(CoordT x, CoordT y);
 
   Edges (CoordT (*hfunc)(CoordT x, CoordT y))
@@ -419,8 +419,8 @@ struct Points
     blockwise(numbuffers, bufsizes, buffers,
 	      [&](int bufsize, CoordT *buffer, int offset) -> void
 	      {
-		copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data(),     2, xmin, xmax);
-		copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + 1, 2, ymin, ymax);
+		copy_with_strides(bufsize, buffer + colx, bufwidth, points_.data() + offset * 2,     2, xmin, xmax);
+		copy_with_strides(bufsize, buffer + coly, bufwidth, points_.data() + offset * 2 + 1, 2, ymin, ymax);
 	      });
 
     bounds_min_[0] = xmin;
@@ -555,13 +555,19 @@ template<typename CoordT>
 void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[], CoordT *buffers[], int bufwidth, int colx, int coly)
 {
   points_.set(numtotal, numbuffers, bufsizes, buffers, bufwidth, colx, coly);
+#if DEBUG_POLY
   vector_print("bounds min", points_.bounds_min_);
   vector_print("     range", points_.bounds_range_);
-
+#endif
+  
   // pre-uniformization, replaces points by normalised sort index
   // and scale points to fit into region's inner box
   points_.pre_uniformize(*region_);
     
+#if DEBUG_POLY > 2
+  vector_print("pre-uni", points_.points_);
+#endif
+
   // compute the spring rest length
   // self.l0_uni = np.sqrt(2 / (np.sqrt(3) * len(self.points) / self.region.area))
   double area = region_->get_area();
@@ -593,6 +599,12 @@ bool Polyspring<CoordT>::iterate ()
   // compute rest length scaling factor
   double hscale = l0_uni_ * edges_.scaling_factor();
   //printf("scaling_factor %f\n", hscale);
+
+  if (count_ == 0) // first iter returns pre-uniformization
+  {
+    count_++;
+    return true;
+  }
   
   // sum repulsive actions for each point
   /* for point in self.points: 
@@ -668,6 +680,10 @@ bool Polyspring<CoordT>::iterate ()
 
   // set push to 0
   points_.end_iteration();
+
+#if DEBUG_POLY > 2
+  vector_print("final", points_.points_);
+#endif
 
   count_++;
   return keep_going;
