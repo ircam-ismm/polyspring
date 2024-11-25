@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 34.0, 87.0, 1023.0, 804.0 ],
+		"rect" : [ 649.0, 79.0, 1023.0, 804.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -444,7 +444,7 @@
 									"cursor_size" : 25,
 									"cursor_sizeunit" : 0,
 									"cursor_visible" : 1,
-									"domain_bounds" : [ 0.020387453958392, 0.832968592643738 ],
+									"domain_bounds" : [ 0.333321415905385, 0.683725095267863 ],
 									"domainruler_bgcolor" : [ 1.0, 1.0, 1.0, 0.0 ],
 									"domainruler_fgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"domainruler_grid" : 0,
@@ -860,7 +860,7 @@
 									"cursor_size" : 25,
 									"cursor_sizeunit" : 0,
 									"cursor_visible" : 1,
-									"domain_bounds" : [ 0.020387453958392, 0.832968592643738 ],
+									"domain_bounds" : [ 0.333321415905385, 0.683725095267863 ],
 									"domainruler_bgcolor" : [ 1.0, 1.0, 1.0, 0.0 ],
 									"domainruler_fgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"domainruler_grid" : 0,
@@ -1544,7 +1544,7 @@
 									"cursor_size" : 25,
 									"cursor_sizeunit" : 0,
 									"cursor_visible" : 1,
-									"domain_bounds" : [ 0.020387453958392, 0.832968592643738 ],
+									"domain_bounds" : [ 0.333321415905385, 0.683725095267863 ],
 									"domainruler_bgcolor" : [ 1.0, 1.0, 1.0, 0.0 ],
 									"domainruler_fgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"domainruler_grid" : 0,
@@ -1679,7 +1679,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 34.0, 113.0, 1023.0, 778.0 ],
+						"rect" : [ 649.0, 105.0, 1023.0, 778.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1881,7 +1881,7 @@
 										}
 ,
 										"classnamespace" : "box",
-										"rect" : [ 59.0, 106.0, 562.0, 176.0 ],
+										"rect" : [ 59.0, 79.0, 562.0, 176.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -1909,6 +1909,7 @@
 										"style" : "",
 										"subpatcher_template" : "",
 										"assistshowspatchername" : 0,
+										"visible" : 1,
 										"boxes" : [ 											{
 												"box" : 												{
 													"id" : "obj-3",
@@ -2434,7 +2435,7 @@
 										}
 ,
 										"classnamespace" : "box",
-										"rect" : [ 68.0, 585.0, 779.0, 480.0 ],
+										"rect" : [ 1427.0, 900.0, 834.0, 487.0 ],
 										"bglocked" : 0,
 										"openinpresentation" : 0,
 										"default_fontsize" : 12.0,
@@ -2462,7 +2463,24 @@
 										"style" : "",
 										"subpatcher_template" : "",
 										"assistshowspatchername" : 0,
+										"visible" : 1,
 										"boxes" : [ 											{
+												"box" : 												{
+													"fontname" : "Arial",
+													"fontsize" : 12.0,
+													"id" : "obj-2",
+													"linecount" : 3,
+													"maxclass" : "message",
+													"numinlets" : 2,
+													"numoutlets" : 1,
+													"outlettype" : [ "" ],
+													"patching_rect" : [ 298.0, 384.5, 569.0, 49.0 ],
+													"presentation_linecount" : 3,
+													"text" : "interface scatterplot, paramdisplayrange fixedwidth $1 $1, paramdisplayrange fixedheight $1 $1, paramcol fixedheight 1, paramcol fixedwidth 1, allbuffersvisible 1, paramcol fillcolor bufferindex, paramcol edgecolor bufferindex, paramdisplayrange edgecolor 1 5, paramdisplayrange fillcolor 1 5, autobounds 0"
+												}
+
+											}
+, 											{
 												"box" : 												{
 													"id" : "obj-3",
 													"maxclass" : "message",
@@ -2928,7 +2946,7 @@
 													"numoutlets" : 1,
 													"outlettype" : [ "" ],
 													"patching_rect" : [ 199.0, 255.5, 569.0, 49.0 ],
-													"text" : "interface scatterplot, paramdisplayrange fixedwidth $1 $1, paramdisplayrange fixedheight $1 $1, paramcol fixedheight 1, paramcol fixedwidth 1, allbuffersvisible 1, paramcol fillcolor bufferindex, paramcol edgecolor bufferindex, paramdisplayrange edgecolor 1 5, paramdisplayrange fillcolor 1 5, autobounds 0"
+													"text" : "interface scatterplot, paramdisplayrange fixedwidth $1 $1, paramdisplayrange fixedheight $1 $1, paramcol fixedheight 1, paramcol fixedwidth 1, allbuffersvisible 1, paramcol fillcolor nodeindex, paramcol edgecolor bufferindex, paramdisplayrange edgecolor 1 5, paramdisplayrange fillcolor 1 5, autobounds 0"
 												}
 
 											}
@@ -3199,7 +3217,7 @@
 									"cursor_size" : 25,
 									"cursor_sizeunit" : 0,
 									"cursor_visible" : 1,
-									"domain_bounds" : [ 0.020387453958392, 0.832968592643738 ],
+									"domain_bounds" : [ 0.333314645343122, 0.683731865830126 ],
 									"domainruler_bgcolor" : [ 1.0, 1.0, 1.0, 0.0 ],
 									"domainruler_fgcolor" : [ 0.0, 0.0, 0.0, 1.0 ],
 									"domainruler_grid" : 0,
@@ -4071,7 +4089,7 @@
 			}
 , 			{
 				"name" : "polyspring.maxpat",
-				"bootpath" : "~/Documents/Programation/python/polyspring/Max",
+				"bootpath" : "~/src/polyspring/Max",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
