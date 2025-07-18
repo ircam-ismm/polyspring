@@ -346,7 +346,11 @@ struct Triangulation
     tripoints_.assign(points.begin(), points.end()); // copy input points and convert to double
 
     // setup and call delaunay triangulation
-    if (del_) delete del_;
+    if (del_) 
+    {
+      delete del_;
+      del_ = NULL; // "new" might be interrupted by exception
+    }
     del_ = new delaunator::Delaunator(tripoints_);
     vertices_ = &del_->triangles;
 
