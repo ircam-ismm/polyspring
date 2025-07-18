@@ -433,7 +433,7 @@ struct Points
     bounds_range_[1] = ymax - ymin;
   } // end Points::set ()
   
-  void pre_uniformize (Region<CoordT> &region)
+  CoordT pre_uniformize (Region<CoordT> &region)
   { // replace points (in descriptor coordinates) by normalised sort index
 
     // get inbox for generating pre-uniformised coords
@@ -472,6 +472,8 @@ struct Points
 	points_[order * 2 + colind] = ((CoordT) i / (numpoints_ - 1)) * len[colind] + p1[colind];
       }
     } // end for colind
+
+    return len[1]; // return y dimension of inbox
   } // end Points::pre_uniformize ()
   
   void update ()
@@ -566,8 +568,16 @@ void Polyspring<CoordT>::set_points (int numtotal, int numbuffers, int bufsizes[
   
   // pre-uniformization, replaces points by normalised sort index
   // and scale points to fit into region's inner box
-  points_.pre_uniformize(*region_);
+  CoordT ydim = points_.pre_uniformize(*region_);
     
+  if (colx == coly)
+  { // all points are in a line: make triangulation possible by random y displacement
+    const CoordT epsilon = ydim / points_.numpoints_ * 1e-2;	// max random displacement: 1/1000 of inter-point distance
+
+    for (int i = 0; i < points_.numpoints_; i++)
+      points_.points_[i * 2 + 1] += (CoordT) std::rand() / RAND_MAX * epsilon;
+  }
+
 #if DEBUG_POLY > 2
   vector_print("pre-uni", points_.points_);
 #endif
